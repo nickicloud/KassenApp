@@ -104,7 +104,14 @@
 
             <!-- Inhalt -->
             <Grid Grid.Row="1" Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- DataGrid -->
                 <DataGrid x:Name="dgCart"
+                          Grid.Row="0"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           Background="Transparent"
@@ -115,6 +122,43 @@
                           HeadersVisibility="Column">
                     <DataGrid.ContextMenu>
                         <ContextMenu>
+                            <ContextMenu.Resources>
+                                <!-- Dark-Theme für Kontextmenü -->
+                                <Style TargetType="ContextMenu">
+                                    <Setter Property="Background" Value="#FF111827"/>
+                                    <Setter Property="BorderBrush" Value="#FF1F2937"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                </Style>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Padding" Value="10,4"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="MenuItem">
+                                                <Border x:Name="border"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsHighlighted" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#FF111827"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Foreground" Value="#FF6B7280"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ContextMenu.Resources>
+
                             <MenuItem x:Name="miDeletePos"
                                       Header="Position löschen"
                                       Click="Menu_DeletePosition_Click"/>
@@ -162,6 +206,16 @@
                                             Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Gesamtsumme -->
+                <TextBlock x:Name="txtTotal"
+                           Grid.Row="1"
+                           Margin="0,8,0,0"
+                           HorizontalAlignment="Right"
+                           Foreground="White"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Text="Summe: 0,00 €"/>
             </Grid>
 
             <!-- Buttons unten -->

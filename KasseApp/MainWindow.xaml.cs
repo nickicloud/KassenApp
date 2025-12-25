@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,8 +18,8 @@ namespace KasseApp
         private readonly ReceiptService _receiptService;
 
         private ObservableCollection<Artikel> _artikelListe = new();
-        private ObservableCollection<WarenkorbPosition> _warenkorb = new();
-        private ObservableCollection<ScanHistoryEntry> _barcodeHistory = new();
+        private readonly ObservableCollection<WarenkorbPosition> _warenkorb = new();
+        private readonly ObservableCollection<ScanHistoryEntry> _barcodeHistory = new();
 
         private bool _hideZeroStock = false;
 
@@ -29,14 +30,12 @@ namespace KasseApp
             var config = ConfigService.Load();
 
             _lang = new LanguageService();
-            // Erwartet: liest z.B. Lang/lang.de.json
             _lang.Load(config.General.Language);
 
             _artikelRepo = new ArtikelRepository(config.Database.ToConnectionString());
             _receiptService = new ReceiptService(config.General.ReceiptPrinterName);
 
             ApplyLanguageTexts();
-
             _ = LoadArtikelAsync();
 
             btnBarcode.Click += BtnBarcode_Click;
@@ -47,7 +46,6 @@ namespace KasseApp
             txtSearch.TextChanged += TxtSearch_TextChanged;
 
             lstBarcodeHistory.ItemsSource = _barcodeHistory;
-
             ClearDetails();
         }
 
@@ -120,7 +118,6 @@ namespace KasseApp
 
         private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
-            // BarcodeWindow bekommt jetzt LanguageService
             var window = new BarcodeWindow(_artikelRepo, _lang)
             {
                 Owner = this
@@ -131,7 +128,6 @@ namespace KasseApp
                 var artikel = window.SelectedArtikel;
 
                 txtSearch.Text = artikel.Barcode;
-
                 await LoadArtikelAsync();
 
                 var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
@@ -210,8 +206,8 @@ namespace KasseApp
                 dgArtikel.SelectedItem = null;
                 if (FindResource("cmEmpty") is ContextMenu emptyMenu)
                 {
-                    // Header für leeres Menü hier setzen
-                    if (emptyMenu.Items[0] is MenuItem miRefresh)
+                    var miRefresh = emptyMenu.Items[0] as MenuItem;
+                    if (miRefresh != null)
                         miRefresh.Header = _lang.T("Context_Empty_Refresh");
 
                     var miZero = emptyMenu.Items
@@ -279,7 +275,6 @@ namespace KasseApp
 
         private async void BtnPay_Click(object sender, RoutedEventArgs e)
         {
-            // CartWindow bekommt jetzt LanguageService
             var cartWindow = new CartWindow(_lang, _warenkorb)
             {
                 Owner = this
@@ -292,8 +287,18 @@ namespace KasseApp
                 return;
             }
 
+            // Bestand lokal verringern
+            foreach (var pos in _warenkorb)
+            {
+                pos.Artikel.Bestand -= pos.Menge;
+                if (pos.Artikel.Bestand < 0)
+                    pos.Artikel.Bestand = 0;
+            }
+
+            // Bon drucken
             _receiptService.PrintReceipt(_warenkorb.ToList());
 
+            // Bestand in der DB speichern
             foreach (var pos in _warenkorb)
             {
                 await _artikelRepo.UpdateBestandAsync(pos.Artikel.Barcode, pos.Artikel.Bestand);
@@ -307,7 +312,6 @@ namespace KasseApp
 
         private async void BtnNew_Click(object sender, RoutedEventArgs e)
         {
-            // ArtikelDialog bekommt LanguageService
             var dialog = new ArtikelDialog(_lang)
             {
                 Owner = this

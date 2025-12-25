@@ -53,6 +53,8 @@
   "CartWindow_Pay": "Bezahlen",
   "CartWindow_Cancel": "Abbrechen",
   "CartWindow_Clear": "Leeren",
-  "CartWindow_DeletePosition": "Position löschen"
+  "CartWindow_DeletePosition": "Position löschen",
+  "CartWindow_Total": "Summe"
+
 
 }

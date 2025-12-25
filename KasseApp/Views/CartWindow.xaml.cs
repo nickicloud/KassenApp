@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 
 namespace KasseApp.Views
@@ -16,6 +18,9 @@ namespace KasseApp.Views
             InitializeComponent();
             dgCart.ItemsSource = _warenkorb;
             ApplyLang();
+            UpdateTotal();
+
+            _warenkorb.CollectionChanged += (_, __) => UpdateTotal();
         }
 
         private void ApplyLang()
@@ -27,8 +32,14 @@ namespace KasseApp.Views
             colPreis.Header = _lang.T("CartWindow_Col_Preis");
             btnPay.Content = _lang.T("CartWindow_Pay");
             btnCancel.Content = _lang.T("CartWindow_Cancel");
-            btnClear.Content = _lang.T("CartWindow_Clear");          // neuen Key anlegen
-            miDeletePos.Header = _lang.T("CartWindow_DeletePosition"); // neuen Key anlegen
+            btnClear.Content = _lang.T("CartWindow_Clear");
+            miDeletePos.Header = _lang.T("CartWindow_DeletePosition");
+        }
+
+        private void UpdateTotal()
+        {
+            decimal sum = _warenkorb.Sum(p => p.Artikel.Preis * p.Menge);
+            txtTotal.Text = $"{_lang.T("CartWindow_Total")}: {sum:0.00} €";
         }
 
         private void BtnPay_Click(object sender, RoutedEventArgs e)
@@ -49,6 +60,7 @@ namespace KasseApp.Views
                 return;
 
             _warenkorb.Clear();
+            UpdateTotal();
         }
 
         private void Menu_DeletePosition_Click(object sender, RoutedEventArgs e)
@@ -57,6 +69,7 @@ namespace KasseApp.Views
                 return;
 
             _warenkorb.Remove(pos);
+            UpdateTotal();
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
