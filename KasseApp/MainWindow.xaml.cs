@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using KasseApp.Views;
 
 namespace KasseApp
@@ -55,6 +56,7 @@ namespace KasseApp
             }
         }
 
+        // Suche in Name + Barcode
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (dgArtikel.ItemsSource == null) return;
@@ -77,6 +79,7 @@ namespace KasseApp
             }
         }
 
+        // Barcode-Fenster öffnen, nach ✓/✗ Liste neu laden und Suche setzen
         private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
             var window = new BarcodeWindow(_artikelRepo, _lang)
@@ -88,37 +91,15 @@ namespace KasseApp
             {
                 var artikel = window.SelectedArtikel;
 
-                // Suchleiste auf Barcode setzen und filtern
+                // Suchleiste auf Barcode setzen
                 txtSearch.Text = artikel.Barcode;
 
-                var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
-                if (window.AddRequested)
-                {
-                    if (pos == null)
-                    {
-                        _warenkorb.Add(new WarenkorbPosition
-                        {
-                            Artikel = artikel,
-                            Menge = 1
-                        });
-                    }
-                    else
-                    {
-                        pos.Menge++;
-                    }
-                }
-                else
-                {
-                    if (pos != null)
-                    {
-                        pos.Menge--;
-                        if (pos.Menge <= 0)
-                            _warenkorb.Remove(pos);
-                    }
-                }
+                // Artikelliste neu laden, damit neuer Bestand sichtbar ist
+                await LoadArtikelAsync();
             }
         }
 
+        // Bezahlen: Bon drucken + Bestand in DB reduzieren
         private async void BtnPay_Click(object sender, RoutedEventArgs e)
         {
             if (_warenkorb.Count == 0)
@@ -132,7 +113,10 @@ namespace KasseApp
             foreach (var pos in _warenkorb)
             {
                 pos.Artikel.Bestand -= pos.Menge;
-                await _artikelRepo.UpdateAsync(pos.Artikel);
+                if (pos.Artikel.Bestand < 0)
+                    pos.Artikel.Bestand = 0;
+
+                await _artikelRepo.UpdateBestandAsync(pos.Artikel.Barcode, pos.Artikel.Bestand);
             }
 
             await LoadArtikelAsync();
@@ -195,6 +179,15 @@ namespace KasseApp
 
             await _artikelRepo.DeleteAsync(selected.Barcode);
             _artikelListe.Remove(selected);
+        }
+
+        // Doppelklick im Grid -> Bearbeiten
+        private void dgArtikel_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (dgArtikel.SelectedItem is Artikel)
+            {
+                BtnEdit_Click(sender, e);
+            }
         }
     }
 }

@@ -10,8 +10,8 @@ namespace KasseApp.Views
         private readonly ArtikelRepository _artikelRepo;
         private readonly LanguageService _lang;
 
+        // Zuletzt gefundener Artikel
         public Artikel? SelectedArtikel { get; private set; }
-        public bool AddRequested { get; private set; } = true;
 
         public BarcodeWindow(ArtikelRepository artikelRepo, LanguageService lang)
         {
@@ -71,7 +71,8 @@ namespace KasseApp.Views
             }
         }
 
-        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        // ✓ : Bestand +1
+        private async void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedArtikel == null)
             {
@@ -79,12 +80,21 @@ namespace KasseApp.Views
                 return;
             }
 
-            AddRequested = true;
-            DialogResult = true;
-            Close();
+            try
+            {
+                SelectedArtikel.Bestand += 1;
+                await _artikelRepo.UpdateBestandAsync(SelectedArtikel.Barcode, SelectedArtikel.Bestand);
+                DialogResult = true;   // MainWindow kann danach Liste neu laden
+                Close();
+            }
+            catch
+            {
+                MessageBox.Show(_lang.T("Message_ErrorDb"));
+            }
         }
 
-        private void BtnRemove_Click(object sender, RoutedEventArgs e)
+        // ✗ : Bestand -1
+        private async void BtnRemove_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedArtikel == null)
             {
@@ -92,9 +102,23 @@ namespace KasseApp.Views
                 return;
             }
 
-            AddRequested = false;
-            DialogResult = true;
-            Close();
+            if (SelectedArtikel.Bestand <= 0)
+            {
+                MessageBox.Show("Bestand ist bereits 0.");
+                return;
+            }
+
+            try
+            {
+                SelectedArtikel.Bestand -= 1;
+                await _artikelRepo.UpdateBestandAsync(SelectedArtikel.Barcode, SelectedArtikel.Bestand);
+                DialogResult = true;
+                Close();
+            }
+            catch
+            {
+                MessageBox.Show(_lang.T("Message_ErrorDb"));
+            }
         }
     }
 }

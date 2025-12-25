@@ -16,7 +16,11 @@
         </StackPanel>
 
         <!-- Artikelliste -->
-        <DataGrid x:Name="dgArtikel" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid x:Name="dgArtikel"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  MouseDoubleClick="dgArtikel_MouseDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Barcode" Binding="{Binding Barcode}" Width="*"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
