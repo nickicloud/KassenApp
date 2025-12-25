@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 
 namespace KasseApp.Views
@@ -8,7 +7,6 @@ namespace KasseApp.Views
     {
         public Artikel Artikel { get; private set; }
 
-        // Konstruktor für "Neu"
         public ArtikelDialog()
         {
             InitializeComponent();
@@ -18,14 +16,12 @@ namespace KasseApp.Views
             btnCancel.Click += (_, _) => DialogResult = false;
         }
 
-        // Konstruktor für "Bearbeiten"
         public ArtikelDialog(Artikel artikel) : this()
         {
-            // Bestehende Werte in die Textboxen laden
             Artikel = artikel;
 
             txtBarcode.Text = artikel.Barcode;
-            txtBarcode.IsEnabled = false; // Primärschlüssel nicht änderbar
+            txtBarcode.IsEnabled = false;
 
             txtName.Text = artikel.Name;
             txtPreis.Text = artikel.Preis.ToString("0.00", CultureInfo.InvariantCulture);
@@ -34,7 +30,6 @@ namespace KasseApp.Views
 
         private void BtnOk_Click(object sender, RoutedEventArgs e)
         {
-            // Basis-Validierung
             if (string.IsNullOrWhiteSpace(txtBarcode.Text) ||
                 string.IsNullOrWhiteSpace(txtName.Text) ||
                 string.IsNullOrWhiteSpace(txtPreis.Text) ||

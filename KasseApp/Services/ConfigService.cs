@@ -19,7 +19,6 @@ namespace KasseApp
     {
         private const string ConfigFileName = "config.json";
 
-        // Lädt die Konfiguration aus der JSON-Datei.
         public static ConfigRoot Load()
         {
             if (!File.Exists(ConfigFileName))
@@ -34,7 +33,6 @@ namespace KasseApp
             return config;
         }
 
-        // Speichert die Konfiguration zurück in die Datei.
         public static void Save(ConfigRoot config)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };

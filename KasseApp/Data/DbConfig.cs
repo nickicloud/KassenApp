@@ -9,7 +9,6 @@
         public string Password { get; set; } = "";
         public string SslMode { get; set; } = "Require";
 
-        // Baut den Npgsql-Connection-String zusammen.
         public string ToConnectionString()
         {
             return $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};SslMode={SslMode}";

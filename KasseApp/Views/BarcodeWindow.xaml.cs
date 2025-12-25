@@ -11,6 +11,7 @@ namespace KasseApp.Views
         private readonly LanguageService _lang;
 
         public Artikel? SelectedArtikel { get; private set; }
+        public bool AddRequested { get; private set; } = true;
 
         public BarcodeWindow(ArtikelRepository artikelRepo, LanguageService lang)
         {
@@ -25,6 +26,10 @@ namespace KasseApp.Views
 
             txtBarcodeInput.TextChanged += TxtBarcodeInput_TextChanged;
             txtBarcodeInput.KeyDown += TxtBarcodeInput_KeyDown;
+
+            btnAdd.Click += BtnAdd_Click;
+            btnRemove.Click += BtnRemove_Click;
+            btnClose.Click += (_, _) => Close();
         }
 
         private void TxtBarcodeInput_TextChanged(object sender, TextChangedEventArgs e)
@@ -52,18 +57,44 @@ namespace KasseApp.Views
                 if (artikel != null)
                 {
                     SelectedArtikel = artikel;
-                    DialogResult = true;
-                    Close();
+                    txtArtikelInfo.Text = $"{artikel.Name}  ({artikel.Preis:0.00} €, Bestand: {artikel.Bestand})";
                 }
                 else
                 {
-                    MessageBox.Show("Barcode nicht gefunden.");
+                    SelectedArtikel = null;
+                    txtArtikelInfo.Text = "Barcode nicht gefunden.";
                 }
             }
             catch
             {
                 MessageBox.Show(_lang.T("Message_ErrorDb"));
             }
+        }
+
+        private void BtnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedArtikel == null)
+            {
+                MessageBox.Show("Kein Artikel geladen.");
+                return;
+            }
+
+            AddRequested = true;
+            DialogResult = true;
+            Close();
+        }
+
+        private void BtnRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedArtikel == null)
+            {
+                MessageBox.Show("Kein Artikel geladen.");
+                return;
+            }
+
+            AddRequested = false;
+            DialogResult = true;
+            Close();
         }
     }
 }

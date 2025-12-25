@@ -2,57 +2,45 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using KasseApp.Views;
 
 namespace KasseApp
 {
     public partial class MainWindow : Window
     {
-        // Repository für DB-Zugriff auf Tabelle 'artikel'.
         private readonly ArtikelRepository _artikelRepo;
-
-        // Sprachdienst für Texte aus lang.xx.json.
         private readonly LanguageService _lang;
-
-        // Service zum Drucken des Kassenbons.
         private readonly ReceiptService _receiptService;
 
-        // Artikelliste für das DataGrid.
         private ObservableCollection<Artikel> _artikelListe = new();
-
-        // Einfache Warenkorb-Liste für den Kassenbon.
-        private ObservableCollection<Artikel> _warenkorb = new();
+        private ObservableCollection<WarenkorbPosition> _warenkorb = new();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Konfiguration laden (config.json).
             var config = ConfigService.Load();
 
-            // Sprache laden.
             _lang = new LanguageService();
             _lang.Load(config.General.Language);
 
-            // Repository & ReceiptService mit ConnectionString / Drucker initialisieren.
             _artikelRepo = new ArtikelRepository(config.Database.ToConnectionString());
             _receiptService = new ReceiptService(config.General.ReceiptPrinterName);
 
-            // Fenstertitel aus Sprachdatei.
             this.Title = _lang.T("Title_MainWindow");
 
-            // Artikel initial laden.
             _ = LoadArtikelAsync();
 
-            // Button-Events verbinden.
             btnBarcode.Click += BtnBarcode_Click;
             btnPay.Click += BtnPay_Click;
             btnNew.Click += BtnNew_Click;
             btnEdit.Click += BtnEdit_Click;
             btnDelete.Click += BtnDelete_Click;
+            txtSearch.TextChanged += TxtSearch_TextChanged;
         }
 
-        // Lädt alle Artikel aus der Datenbank und zeigt sie im DataGrid an.
         private async Task LoadArtikelAsync()
         {
             try
@@ -67,7 +55,28 @@ namespace KasseApp
             }
         }
 
-        // Öffnet das Barcode-Fenster und fügt den gefundenen Artikel dem Warenkorb hinzu.
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (dgArtikel.ItemsSource == null) return;
+
+            var view = CollectionViewSource.GetDefaultView(dgArtikel.ItemsSource);
+            string search = txtSearch.Text?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrEmpty(search))
+            {
+                view.Filter = null;
+            }
+            else
+            {
+                view.Filter = obj =>
+                {
+                    if (obj is not Artikel a) return false;
+                    return (a.Name?.ToLower().Contains(search) == true) ||
+                           (a.Barcode?.ToLower().Contains(search) == true);
+                };
+            }
+        }
+
         private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
             var window = new BarcodeWindow(_artikelRepo, _lang)
@@ -77,12 +86,40 @@ namespace KasseApp
 
             if (window.ShowDialog() == true && window.SelectedArtikel != null)
             {
-                _warenkorb.Add(window.SelectedArtikel);
+                var artikel = window.SelectedArtikel;
+
+                // Suchleiste auf Barcode setzen und filtern
+                txtSearch.Text = artikel.Barcode;
+
+                var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
+                if (window.AddRequested)
+                {
+                    if (pos == null)
+                    {
+                        _warenkorb.Add(new WarenkorbPosition
+                        {
+                            Artikel = artikel,
+                            Menge = 1
+                        });
+                    }
+                    else
+                    {
+                        pos.Menge++;
+                    }
+                }
+                else
+                {
+                    if (pos != null)
+                    {
+                        pos.Menge--;
+                        if (pos.Menge <= 0)
+                            _warenkorb.Remove(pos);
+                    }
+                }
             }
         }
 
-        // Startet den Bezahlvorgang und druckt den Kassenbon.
-        private void BtnPay_Click(object sender, RoutedEventArgs e)
+        private async void BtnPay_Click(object sender, RoutedEventArgs e)
         {
             if (_warenkorb.Count == 0)
             {
@@ -91,10 +128,17 @@ namespace KasseApp
             }
 
             _receiptService.PrintReceipt(_warenkorb.ToList());
+
+            foreach (var pos in _warenkorb)
+            {
+                pos.Artikel.Bestand -= pos.Menge;
+                await _artikelRepo.UpdateAsync(pos.Artikel);
+            }
+
+            await LoadArtikelAsync();
             _warenkorb.Clear();
         }
 
-        // Neuen Artikel mit ArtikelDialog anlegen.
         private async void BtnNew_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ArtikelDialog
@@ -111,13 +155,11 @@ namespace KasseApp
             }
         }
 
-        // Ausgewählten Artikel bearbeiten.
         private async void BtnEdit_Click(object sender, RoutedEventArgs e)
         {
             if (dgArtikel.SelectedItem is not Artikel selected)
                 return;
 
-            // Kopie für den Dialog, damit bei Abbrechen nichts verändert wird.
             var copy = new Artikel
             {
                 Barcode = selected.Barcode,
@@ -133,7 +175,6 @@ namespace KasseApp
 
             if (dialog.ShowDialog() == true)
             {
-                // Änderungen aus dem Dialog übernehmen.
                 selected.Name = dialog.Artikel.Name;
                 selected.Preis = dialog.Artikel.Preis;
                 selected.Bestand = dialog.Artikel.Bestand;
@@ -143,7 +184,6 @@ namespace KasseApp
             }
         }
 
-        // Ausgewählten Artikel löschen.
         private async void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (dgArtikel.SelectedItem is not Artikel selected)

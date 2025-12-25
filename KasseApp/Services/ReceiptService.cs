@@ -8,14 +8,14 @@ namespace KasseApp
     public class ReceiptService
     {
         private readonly string _printerName;
-        private List<Artikel> _currentItems = new List<Artikel>();
+        private List<WarenkorbPosition> _currentItems = new List<WarenkorbPosition>();
 
         public ReceiptService(string printerName)
         {
             _printerName = printerName;
         }
 
-        public void PrintReceipt(List<Artikel> items)
+        public void PrintReceipt(List<WarenkorbPosition> items)
         {
             if (items == null || items.Count == 0)
                 return;
@@ -50,18 +50,18 @@ namespace KasseApp
             e.Graphics.DrawString(new string('-', 32), font, Brushes.Black, x, y);
             y += lineHeight;
 
-            foreach (var artikel in _currentItems)
+            foreach (var pos in _currentItems)
             {
-                decimal total = artikel.Preis;
+                decimal total = pos.Gesamtpreis;
                 summe += total;
 
-                string name = artikel.Name ?? string.Empty;
-                if (name.Length > 16)
-                    name = name.Substring(0, 16);
+                string name = pos.Artikel.Name ?? string.Empty;
+                if (name.Length > 12)
+                    name = name.Substring(0, 12);
                 else
-                    name = name.PadRight(16);
+                    name = name.PadRight(12);
 
-                string line = $"{name} {artikel.Preis,6:0.00}";
+                string line = $"{name} {pos.Menge,2}x {pos.Artikel.Preis,5:0.00} {total,6:0.00}";
                 e.Graphics.DrawString(line, font, Brushes.Black, x, y);
                 y += lineHeight;
             }
