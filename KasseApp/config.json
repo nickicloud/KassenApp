@@ -1,0 +1,14 @@
+﻿{
+  "Database": {
+    "Host": "localhost",
+    "Port": 5432,
+    "Database": "kasse_db",
+    "Username": "admin",
+    "Password": "passwort",
+    "SslMode": "Require"
+  },
+  "General": {
+    "Language": "de",
+    "ReceiptPrinterName": "POS-Printer-1"
+  }
+}

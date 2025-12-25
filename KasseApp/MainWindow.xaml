@@ -1,0 +1,37 @@
+﻿<Window x:Class="KasseApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kasse" Height="600" Width="900">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Suchzeile -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <Label Content="Suche:" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtSearch" Width="200" Margin="5,0,0,0"/>
+        </StackPanel>
+
+        <!-- Artikelliste -->
+        <DataGrid x:Name="dgArtikel" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Barcode" Binding="{Binding Barcode}" Width="*"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="Preis" Binding="{Binding Preis}" Width="*"/>
+                <DataGridTextColumn Header="Bestand" Binding="{Binding Bestand}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Button-Leiste unten -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,10,0,0" HorizontalAlignment="Right">
+            <Button x:Name="btnNew" Content="Neu" Width="80" Margin="5"/>
+            <Button x:Name="btnEdit" Content="Bearbeiten" Width="80" Margin="5"/>
+            <Button x:Name="btnDelete" Content="Löschen" Width="80" Margin="5"/>
+            <Button x:Name="btnPay" Content="Bezahlen" Width="100" Margin="5"/>
+            <Button x:Name="btnBarcode" Content="Barcode" Width="100" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>

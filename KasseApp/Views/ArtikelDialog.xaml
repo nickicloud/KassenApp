@@ -1,0 +1,39 @@
+﻿<Window x:Class="KasseApp.Views.ArtikelDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Artikel" Height="250" Width="400"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="0" Grid.Column="0" Content="Barcode:" Margin="0,0,5,5"/>
+        <TextBox x:Name="txtBarcode" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5"/>
+
+        <Label Grid.Row="1" Grid.Column="0" Content="Name:" Margin="0,0,5,5"/>
+        <TextBox x:Name="txtName" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5"/>
+
+        <Label Grid.Row="2" Grid.Column="0" Content="Preis:" Margin="0,0,5,5"/>
+        <TextBox x:Name="txtPreis" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5"/>
+
+        <Label Grid.Row="3" Grid.Column="0" Content="Bestand:" Margin="0,0,5,5"/>
+        <TextBox x:Name="txtBestand" Grid.Row="3" Grid.Column="1" Margin="0,0,0,5"/>
+
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="btnOk" Content="OK" Width="80" Margin="5"/>
+            <Button x:Name="btnCancel" Content="Abbrechen" Width="80" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
