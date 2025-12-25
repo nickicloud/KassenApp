@@ -1,0 +1,14 @@
+﻿{
+  "Database": {
+    "Host": "193.42.11.28",
+    "Port": 5432,
+    "Database": "kasse_db",
+    "Username": "admin",
+    "Password": "Nicklas7110.",
+    "SslMode": "Require"
+  },
+  "General": {
+    "Language": "de",
+    "ReceiptPrinterName": "POS-Printer-1"
+  }
+}
