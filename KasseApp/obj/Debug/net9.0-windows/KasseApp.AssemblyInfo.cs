@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KasseApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0928248ab4b1b6cba33dfa5c55240384b3190834")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9c1feee0614b3a8acdbddd184ad8c1f9f51ffdc0")]
 [assembly: System.Reflection.AssemblyProductAttribute("KasseApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KasseApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

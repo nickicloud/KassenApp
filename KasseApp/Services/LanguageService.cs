@@ -1,29 +1,62 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-public class LanguageService
+namespace KasseApp
 {
-    private Dictionary<string, string> _translations = new();
-
-    // Lädt die Sprachdatei anhand des Sprachcodes (z.B. "de" -> lang.de.json).
-    public void Load(string languageCode)
+    public class LanguageService
     {
-        string fileName = $"lang.{languageCode}.json";
-        if (!File.Exists(fileName))
+        private Dictionary<string, string> _dict = new();
+
+        /// <summary>
+        /// Lädt die Sprachdatei aus dem Ordner "Lang" neben der EXE.
+        /// languageCode: z.B. "de" -> Datei "lang.de.json"
+        /// </summary>
+        public void Load(string languageCode)
         {
-            _translations = new Dictionary<string, string>();
-            return;
+            // Basisverzeichnis der laufenden EXE, z.B. bin\Debug\net9.0-windows
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Dateiname nach Schema lang.xx.json
+            var fileName = $"lang.{languageCode}.json";
+
+            // Ordner "Lang" unterhalb der EXE
+            var fullPath = Path.Combine(baseDir, "Lang", fileName);
+
+            // Wenn die Datei nicht existiert, versuche zur Sicherheit lang.de.json
+            if (!File.Exists(fullPath))
+            {
+                var fallback = Path.Combine(baseDir, "Lang", "lang.de.json");
+                if (File.Exists(fallback))
+                {
+                    fullPath = fallback;
+                }
+                else
+                {
+                    // Wirf eine klare Exception – hier crasht aktuell dein Programm
+                    throw new FileNotFoundException(
+                        $"Language file not found. Expected at: {fullPath}",
+                        fullPath);
+                }
+            }
+
+            var json = File.ReadAllText(fullPath);
+
+            var options = new JsonSerializerOptions
+            {
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            };
+
+            _dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json, options)
+                    ?? new Dictionary<string, string>();
         }
 
-        var json = File.ReadAllText(fileName);
-        _translations = JsonSerializer.Deserialize<Dictionary<string, string>>(json)
-                        ?? new Dictionary<string, string>();
-    }
-
-    // Gibt den Text zum Key zurück oder den Key selbst, wenn nichts gefunden wird.
-    public string T(string key)
-    {
-        return _translations.TryGetValue(key, out var value) ? value : key;
+        /// <summary>
+        /// Gibt den Text zu einem Key zurück oder den Key selbst, falls nicht gefunden.
+        /// </summary>
+        public string T(string key)
+            => _dict.TryGetValue(key, out var value) ? value : key;
     }
 }

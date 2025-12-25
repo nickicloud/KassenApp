@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.Linq;
 
 namespace KasseApp
 {
@@ -24,13 +25,33 @@ namespace KasseApp
 
             var printDoc = new PrintDocument();
 
+            // Wenn ein Druckername konfiguriert wurde, prüfen ob es ihn gibt.
             if (!string.IsNullOrWhiteSpace(_printerName))
             {
-                printDoc.PrinterSettings.PrinterName = _printerName;
+                bool exists = PrinterSettings.InstalledPrinters
+                    .Cast<string>()
+                    .Any(p => string.Equals(p, _printerName, StringComparison.OrdinalIgnoreCase));
+
+                if (exists)
+                {
+                    printDoc.PrinterSettings.PrinterName = _printerName;
+                }
+                // sonst: still den Standarddrucker verwenden
             }
 
             printDoc.PrintPage += PrintDoc_PrintPage;
-            printDoc.Print();
+
+            try
+            {
+                printDoc.Print();
+            }
+            catch (InvalidPrinterException ex)
+            {
+                // Zum Debuggen: Fehler anzeigen, damit du siehst, was los ist.
+                System.Windows.MessageBox.Show(
+                    $"Druckerfehler:\n{ex.Message}\n\nBitte Drucker in config.json prüfen.",
+                    "Druckerfehler");
+            }
         }
 
         private void PrintDoc_PrintPage(object sender, PrintPageEventArgs e)

@@ -8,5 +8,8 @@
 //------------------------------------------------------------------------------
 
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("config.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("lang/lang.de.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("assets/icon.png")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("assets/icon.ico")]
 
 

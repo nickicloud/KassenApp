@@ -1,124 +1,92 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace KasseApp.Views
 {
     public partial class BarcodeWindow : Window
     {
-        private readonly ArtikelRepository _artikelRepo;
+        private readonly ArtikelRepository _repo;
         private readonly LanguageService _lang;
 
-        // Zuletzt gefundener Artikel
         public Artikel? SelectedArtikel { get; private set; }
 
-        public BarcodeWindow(ArtikelRepository artikelRepo, LanguageService lang)
+        public BarcodeWindow(ArtikelRepository repo, LanguageService lang)
         {
-            InitializeComponent();
-
-            _artikelRepo = artikelRepo;
+            _repo = repo;
             _lang = lang;
-
-            this.Title = _lang.T("Title_BarcodeWindow");
-
-            Loaded += (sender, args) => txtBarcodeInput.Focus();
-
-            txtBarcodeInput.TextChanged += TxtBarcodeInput_TextChanged;
-            txtBarcodeInput.KeyDown += TxtBarcodeInput_KeyDown;
-
-            btnAdd.Click += BtnAdd_Click;
-            btnRemove.Click += BtnRemove_Click;
-            btnClose.Click += (_, _) => Close();
+            InitializeComponent();
+            ApplyLang();
+            Loaded += (_, _) => txtBarcodeInput.Focus();
         }
 
-        private void TxtBarcodeInput_TextChanged(object sender, TextChangedEventArgs e)
+        private void ApplyLang()
         {
-            txtBarcodeDisplay.Text = txtBarcodeInput.Text;
+            Title = _lang.T("BarcodeWindow_Title");
+            txtTitleBar.Text = _lang.T("BarcodeWindow_Title");        // z.B. "Barcode-Scan"
+            btnClose.Content = _lang.T("BarcodeWindow_Cancel");       // Text für „Schließen“
+            // txtArtikelInfo kann später auch dynamische Texte bekommen (z.B. Name/Preis)
         }
 
-        private async void TxtBarcodeInput_KeyDown(object sender, KeyEventArgs e)
+        private async Task LoadArtikelAsync(string barcode)
         {
-            if (e.Key == Key.Enter)
+            if (string.IsNullOrWhiteSpace(barcode))
             {
-                string barcode = txtBarcodeInput.Text.Trim();
-                if (!string.IsNullOrEmpty(barcode))
-                {
-                    await SearchBarcodeAsync(barcode);
-                }
+                txtBarcodeDisplay.Text = "";
+                txtArtikelInfo.Text = "";
+                SelectedArtikel = null;
+                return;
+            }
+
+            txtBarcodeDisplay.Text = barcode;
+
+            var artikel = await _repo.GetByBarcodeAsync(barcode);
+            SelectedArtikel = artikel;
+
+            if (artikel == null)
+            {
+                txtArtikelInfo.Text = _lang.T("BarcodeWindow_Info"); // z.B. „Bitte Barcode scannen oder eingeben.“
+            }
+            else
+            {
+                txtArtikelInfo.Text = $"{artikel.Name} – {artikel.Preis:0.00} € (Bestand: {artikel.Bestand})";
             }
         }
 
-        private async Task SearchBarcodeAsync(string barcode)
+        private async void txtBarcodeInput_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            try
-            {
-                var artikel = await _artikelRepo.GetByBarcodeAsync(barcode);
-                if (artikel != null)
-                {
-                    SelectedArtikel = artikel;
-                    txtArtikelInfo.Text = $"{artikel.Name}  ({artikel.Preis:0.00} €, Bestand: {artikel.Bestand})";
-                }
-                else
-                {
-                    SelectedArtikel = null;
-                    txtArtikelInfo.Text = "Barcode nicht gefunden.";
-                }
-            }
-            catch
-            {
-                MessageBox.Show(_lang.T("Message_ErrorDb"));
-            }
+            await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
         }
 
-        // ✓ : Bestand +1
-        private async void BtnAdd_Click(object sender, RoutedEventArgs e)
+        private async void btnAdd_Click(object sender, RoutedEventArgs e)
         {
+            // Bestätigen – Fenster mit ausgewähltem Artikel schließen
             if (SelectedArtikel == null)
             {
-                MessageBox.Show("Kein Artikel geladen.");
-                return;
+                await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
+                if (SelectedArtikel == null)
+                    return;
             }
 
-            try
-            {
-                SelectedArtikel.Bestand += 1;
-                await _artikelRepo.UpdateBestandAsync(SelectedArtikel.Barcode, SelectedArtikel.Bestand);
-                DialogResult = true;   // MainWindow kann danach Liste neu laden
-                Close();
-            }
-            catch
-            {
-                MessageBox.Show(_lang.T("Message_ErrorDb"));
-            }
+            DialogResult = true;
+            Close();
         }
 
-        // ✗ : Bestand -1
-        private async void BtnRemove_Click(object sender, RoutedEventArgs e)
+        private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedArtikel == null)
-            {
-                MessageBox.Show("Kein Artikel geladen.");
-                return;
-            }
+            // Optional: Eingabe leeren
+            txtBarcodeInput.Text = "";
+        }
 
-            if (SelectedArtikel.Bestand <= 0)
-            {
-                MessageBox.Show("Bestand ist bereits 0.");
-                return;
-            }
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
 
-            try
-            {
-                SelectedArtikel.Bestand -= 1;
-                await _artikelRepo.UpdateBestandAsync(SelectedArtikel.Barcode, SelectedArtikel.Bestand);
-                DialogResult = true;
-                Close();
-            }
-            catch
-            {
-                MessageBox.Show(_lang.T("Message_ErrorDb"));
-            }
+        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                DragMove();
         }
     }
 }

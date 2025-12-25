@@ -5,58 +5,81 @@ namespace KasseApp.Views
 {
     public partial class ArtikelDialog : Window
     {
+        private readonly LanguageService _lang;
         public Artikel Artikel { get; private set; }
 
-        public ArtikelDialog()
+        public ArtikelDialog(LanguageService lang)
         {
+            _lang = lang;
             InitializeComponent();
             Artikel = new Artikel();
-
-            btnOk.Click += BtnOk_Click;
-            btnCancel.Click += (_, _) => DialogResult = false;
+            ApplyLang(false);
         }
 
-        public ArtikelDialog(Artikel artikel) : this()
+        public ArtikelDialog(LanguageService lang, Artikel existing)
         {
-            Artikel = artikel;
+            _lang = lang;
+            InitializeComponent();
+            Artikel = existing;
+            ApplyLang(true);
 
-            txtBarcode.Text = artikel.Barcode;
-            txtBarcode.IsEnabled = false;
+            txtBarcode.Text = existing.Barcode;
+            txtBarcode.IsReadOnly = true;          // Barcode nicht mehr editierbar
+            txtBarcode.IsTabStop = false;          // optional: nicht fokussierbar
+            txtBarcode.Cursor = System.Windows.Input.Cursors.Arrow;
 
-            txtName.Text = artikel.Name;
-            txtPreis.Text = artikel.Preis.ToString("0.00", CultureInfo.InvariantCulture);
-            txtBestand.Text = artikel.Bestand.ToString();
+            txtName.Text = existing.Name;
+            txtPreis.Text = existing.Preis.ToString(CultureInfo.InvariantCulture);
+            txtBestand.Text = existing.Bestand.ToString();
+        }
+
+
+        private void ApplyLang(bool edit)
+        {
+            Title = edit ? _lang.T("ArtikelDialog_Title_Edit") : _lang.T("ArtikelDialog_Title_New");
+            txtTitleBar.Text = Title;
+
+            lblBarcode.Text = _lang.T("ArtikelDialog_Barcode");
+            lblName.Text = _lang.T("ArtikelDialog_Name");
+            lblPreis.Text = _lang.T("ArtikelDialog_Preis");
+            lblBestand.Text = _lang.T("ArtikelDialog_Bestand");
+
+            btnOk.Content = _lang.T("ArtikelDialog_Ok");
+            btnCancel.Content = _lang.T("ArtikelDialog_Cancel");
         }
 
         private void BtnOk_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtBarcode.Text) ||
-                string.IsNullOrWhiteSpace(txtName.Text) ||
-                string.IsNullOrWhiteSpace(txtPreis.Text) ||
-                string.IsNullOrWhiteSpace(txtBestand.Text))
-            {
-                MessageBox.Show("Bitte alle Felder ausfüllen.");
-                return;
-            }
-
-            if (!decimal.TryParse(txtPreis.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out var preis))
-            {
-                MessageBox.Show("Preis ist ungültig.");
-                return;
-            }
-
-            if (!int.TryParse(txtBestand.Text, out var bestand))
-            {
-                MessageBox.Show("Bestand ist ungültig.");
-                return;
-            }
-
             Artikel.Barcode = txtBarcode.Text.Trim();
             Artikel.Name = txtName.Text.Trim();
-            Artikel.Preis = preis;
-            Artikel.Bestand = bestand;
+
+            if (decimal.TryParse(txtPreis.Text.Replace(',', '.'),
+                    NumberStyles.Any, CultureInfo.InvariantCulture, out var preis))
+                Artikel.Preis = preis;
+
+            if (int.TryParse(txtBestand.Text, out var best))
+                Artikel.Bestand = best;
 
             DialogResult = true;
+            Close();
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                DragMove();
         }
     }
 }

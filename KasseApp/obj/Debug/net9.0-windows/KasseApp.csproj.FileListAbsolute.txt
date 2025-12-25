@@ -34,3 +34,9 @@ D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\Views\BarcodeWindow.baml
 D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\Views\ArtikelDialog.g.cs
 D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\Views\BarcodeWindow.g.cs
 D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\KasseApp.sourcelink.json
+D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\Views\CartWindow.baml
+D:\csharp\KasseApp\KasseApp\obj\Debug\net9.0-windows\Views\CartWindow.g.cs
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Newtonsoft.Json.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Lang\lang.de.json
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Assets\icon.png
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Assets\icon.ico

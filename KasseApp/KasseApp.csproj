@@ -6,9 +6,11 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+        <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
       <PackageReference Include="Npgsql" Version="10.0.1" />
       <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
     </ItemGroup>
@@ -16,6 +18,18 @@
     <ItemGroup>
         <None Remove="config.json" />
         <Content Include="config.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Lang\lang.de.json" />
+        <Content Include="Lang\lang.de.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Assets\icon.png" />
+        <Content Include="Assets\icon.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Assets\icon.ico" />
+        <Content Include="Assets\icon.ico">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
