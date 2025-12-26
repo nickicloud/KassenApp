@@ -54,7 +54,16 @@
   "CartWindow_Cancel": "Abbrechen",
   "CartWindow_Clear": "Leeren",
   "CartWindow_DeletePosition": "Position löschen",
-  "CartWindow_Total": "Summe"
+  "CartWindow_Total": "Summe",
+
+  "LabelWindow_Title": "Etiketten drucken",
+  "LabelWindow_Print": "Drucken",
+  "LabelWindow_Cancel": "Abbrechen",
+  "LabelWindow_AskPrint": "Möchtest du für diesen Artikel Etiketten drucken?",
+  "LabelWindow_InvalidCount": "Bitte eine gültige Anzahl größer 0 eingeben.",
+  "LabelWindow_PrintError": "Fehler beim Drucken.",
+  "Button_PrintLabel": "Drucken",
+  "Message_NoArticleSelected": "Bitte zuerst einen Artikel auswählen."
 
 
 }

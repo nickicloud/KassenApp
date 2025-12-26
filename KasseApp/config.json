@@ -1,14 +1,21 @@
 ﻿{
   "Database": {
-    "Host": "193.42.11.28",
+    "Host": "localhost",
     "Port": 5432,
     "Database": "kasse_db",
     "Username": "admin",
-    "Password": "Nicklas7110.",
+    "Password": "passwort",
     "SslMode": "Require"
   },
   "General": {
     "Language": "de",
-    "ReceiptPrinterName": "Microsoft Print to PDF"
+    "ReceiptPrinterName": "Microsoft Print to PDF",
+    "A4PrinterName": "Microsoft Print to PDF",
+    "LabelPrinterName": "Microsoft Print to PDF",
+    "Label": {
+      "WidthMm": 10,
+      "HeightMm": 17,
+      "MarginMm": 5
+    }
   }
 }

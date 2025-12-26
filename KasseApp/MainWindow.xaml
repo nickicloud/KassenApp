@@ -10,6 +10,7 @@
         AllowsTransparency="True">
 
     <Window.Resources>
+        <!-- Basis-Button -->
         <Style x:Key="BaseButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="13"/>
@@ -63,11 +64,73 @@
             <Setter Property="Background" Value="#FFDC2626"/>
         </Style>
 
+        <!-- ContextMenu: komplett eigenes Template, KEINE Icon-Spalte -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Background" Value="#FF020617"/>
+            <Setter Property="BorderBrush" Value="#FF334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <!-- Direkter ItemsHost, kein Grid mit Icon-Leiste -->
+                            <StackPanel IsItemsHost="True"
+                                        Margin="0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- MenuItem: nur Text, kein Icon-Bereich links -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="2,1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF1F2937"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#FF6B7280"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF0F172A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- ContextMenu für leeren Bereich -->
         <ContextMenu x:Key="cmEmpty">
-            <MenuItem Click="Menu_Refresh_Click"/>
+            <MenuItem Header="Aktualisieren"
+                      Click="Menu_Refresh_Click"/>
             <Separator/>
-            <MenuItem IsCheckable="True"
+            <MenuItem Header="Artikel mit Bestand 0 ausblenden"
+                      IsCheckable="True"
                       Click="Menu_ToggleZero_Click"/>
         </ContextMenu>
     </Window.Resources>
@@ -97,12 +160,13 @@
                 <StackPanel Orientation="Horizontal"
                             Margin="12,0,0,0"
                             VerticalAlignment="Center">
-                    <Image Source="Assets/icon.jpg"
+                    <Image Source="Assets/icon.ico"
                            Width="28"
                            Height="28"
                            Stretch="UniformToFill"
                            SnapsToDevicePixels="True"/>
                     <TextBlock x:Name="txtHeaderTitle"
+                               Text="Kassensystem"
                                Foreground="White"
                                FontSize="16"
                                FontWeight="SemiBold"
@@ -187,12 +251,14 @@
                             <Button x:Name="btnBarcode"
                                     Width="110"
                                     Height="32"
-                                    Style="{StaticResource SecondaryButtonStyle}"/>
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Click="BtnBarcode_Click"/>
                             <Button x:Name="btnPay"
                                     Width="110"
                                     Height="32"
                                     Margin="8,0,0,0"
-                                    Style="{StaticResource PrimaryButtonStyle}"/>
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="BtnPay_Click"/>
                         </StackPanel>
                     </DockPanel>
                 </Border>
@@ -221,10 +287,15 @@
                               VerticalGridLinesBrush="#FF374151"
                               AlternatingRowBackground="#FF111827">
 
+                        <!-- Rechtsklick-Menü für Artikel -->
                         <DataGrid.ContextMenu>
                             <ContextMenu x:Name="cmArtikel">
-                                <MenuItem x:Name="miCopyId" Click="Menu_CopyId_Click"/>
-                                <MenuItem x:Name="miAddToCart" Click="Menu_AddToCart_Click"/>
+                                <MenuItem x:Name="miCopyId"
+                                          Header="Produkt ID kopieren"
+                                          Click="Menu_CopyId_Click"/>
+                                <MenuItem x:Name="miAddToCart"
+                                          Header="In Warenkorb hinzufügen"
+                                          Click="Menu_AddToCart_Click"/>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
 
@@ -258,13 +329,17 @@
                         </DataGrid.Resources>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="colBarcode" Width="*"
+                            <DataGridTextColumn x:Name="colBarcode"
+                                                Width="*"
                                                 Binding="{Binding Barcode}" />
-                            <DataGridTextColumn x:Name="colName" Width="2*"
+                            <DataGridTextColumn x:Name="colName"
+                                                Width="2*"
                                                 Binding="{Binding Name}" />
-                            <DataGridTextColumn x:Name="colPreis" Width="*"
+                            <DataGridTextColumn x:Name="colPreis"
+                                                Width="*"
                                                 Binding="{Binding Preis}" />
-                            <DataGridTextColumn x:Name="colBestand" Width="*"
+                            <DataGridTextColumn x:Name="colBestand"
+                                                Width="*"
                                                 Binding="{Binding Bestand}" />
                         </DataGrid.Columns>
                     </DataGrid>
@@ -288,7 +363,8 @@
                                        Foreground="White"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Margin="0,0,0,6"/>
+                                       Margin="0,0,0,6"
+                                       Text="Barcode-Verlauf"/>
                             <ListBox x:Name="lstBarcodeHistory"
                                      Background="Transparent"
                                      BorderThickness="0"
@@ -304,6 +380,7 @@
                                 Padding="8">
                             <StackPanel>
                                 <TextBlock x:Name="lblDetailHeader"
+                                           Text="Details"
                                            Foreground="White"
                                            FontSize="12"
                                            FontWeight="SemiBold"
@@ -339,20 +416,33 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,12,0,0">
+                    <Button x:Name="btnPrintLabel"
+                            Width="100"
+                            Height="30"
+                            Margin="0,0,8,0"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Drucken"
+                            Click="BtnPrintLabel_Click"/>
                     <Button x:Name="btnNew"
                             Width="90"
                             Height="30"
                             Margin="0,0,8,0"
-                            Style="{StaticResource SecondaryButtonStyle}"/>
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Neu"
+                            Click="BtnNew_Click"/>
                     <Button x:Name="btnEdit"
                             Width="100"
                             Height="30"
                             Margin="0,0,8,0"
-                            Style="{StaticResource SecondaryButtonStyle}"/>
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Bearbeiten"
+                            Click="BtnEdit_Click"/>
                     <Button x:Name="btnDelete"
                             Width="90"
                             Height="30"
-                            Style="{StaticResource DangerButtonStyle}"/>
+                            Style="{StaticResource DangerButtonStyle}"
+                            Content="Löschen"
+                            Click="BtnDelete_Click"/>
                 </StackPanel>
             </Grid>
         </Grid>

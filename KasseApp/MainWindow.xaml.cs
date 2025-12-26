@@ -16,6 +16,7 @@ namespace KasseApp
         private readonly ArtikelRepository _artikelRepo;
         private readonly LanguageService _lang;
         private readonly ReceiptService _receiptService;
+        private readonly LabelPrintService _labelPrintService;
 
         private ObservableCollection<Artikel> _artikelListe = new();
         private readonly ObservableCollection<WarenkorbPosition> _warenkorb = new();
@@ -35,15 +36,12 @@ namespace KasseApp
             _artikelRepo = new ArtikelRepository(config.Database.ToConnectionString());
             _receiptService = new ReceiptService(config.General.ReceiptPrinterName);
 
+            _labelPrintService = new LabelPrintService(
+                config.General.A4PrinterName,
+                config.General.LabelPrinterName);
+
             ApplyLanguageTexts();
             _ = LoadArtikelAsync();
-
-            btnBarcode.Click += BtnBarcode_Click;
-            btnPay.Click += BtnPay_Click;
-            btnNew.Click += BtnNew_Click;
-            btnEdit.Click += BtnEdit_Click;
-            btnDelete.Click += BtnDelete_Click;
-            txtSearch.TextChanged += TxtSearch_TextChanged;
 
             lstBarcodeHistory.ItemsSource = _barcodeHistory;
             ClearDetails();
@@ -61,6 +59,7 @@ namespace KasseApp
             btnNew.Content = _lang.T("Button_New");
             btnEdit.Content = _lang.T("Button_Edit");
             btnDelete.Content = _lang.T("Button_Delete");
+            btnPrintLabel.Content = _lang.T("Button_PrintLabel");
 
             colBarcode.Header = _lang.T("Grid_Col_Barcode");
             colName.Header = _lang.T("Grid_Col_Name");
@@ -287,7 +286,6 @@ namespace KasseApp
                 return;
             }
 
-            // Bestand lokal verringern
             foreach (var pos in _warenkorb)
             {
                 pos.Artikel.Bestand -= pos.Menge;
@@ -295,10 +293,8 @@ namespace KasseApp
                     pos.Artikel.Bestand = 0;
             }
 
-            // Bon drucken
             _receiptService.PrintReceipt(_warenkorb.ToList());
 
-            // Bestand in der DB speichern
             foreach (var pos in _warenkorb)
             {
                 await _artikelRepo.UpdateBestandAsync(pos.Artikel.Barcode, pos.Artikel.Bestand);
@@ -370,6 +366,35 @@ namespace KasseApp
 
             await _artikelRepo.DeleteAsync(selected.Barcode);
             _artikelListe.Remove(selected);
+        }
+
+        // HIER: Bestand beim Etikettendruck erhöhen und speichern
+        private async void BtnPrintLabel_Click(object sender, RoutedEventArgs e)
+        {
+            if (dgArtikel.SelectedItem is not Artikel selected)
+            {
+                MessageBox.Show(_lang.T("Message_NoArticleSelected"));
+                return;
+            }
+
+            var window = new LabelPrintWindow(_lang, _labelPrintService, selected)
+            {
+                Owner = this
+            };
+
+            var result = window.ShowDialog();
+            if (result == true)
+            {
+                // Bestand im Artikel erhöhen
+                selected.Bestand += window.Anzahl;
+
+                // In DB speichern
+                await _artikelRepo.UpdateBestandAsync(selected.Barcode, selected.Bestand);
+
+                // Grid aktualisieren + Filter anwenden
+                dgArtikel.Items.Refresh();
+                ApplyZeroFilter();
+            }
         }
 
         private void dgArtikel_MouseDoubleClick(object sender, MouseButtonEventArgs e)

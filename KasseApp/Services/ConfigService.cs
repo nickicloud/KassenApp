@@ -8,12 +8,16 @@ namespace KasseApp
         public DbConfig Database { get; set; } = new();
         public GeneralConfig General { get; set; } = new();
     }
-
+    
     public class GeneralConfig
     {
         public string Language { get; set; } = "de";
         public string ReceiptPrinterName { get; set; } = "";
+        public string A4PrinterName { get; set; } = "";
+        public string LabelPrinterName { get; set; } = "";
+        public LabelConfig Label { get; set; } = new();
     }
+
 
     public static class ConfigService
     {
