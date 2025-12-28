@@ -36,6 +36,7 @@ namespace KasseApp
                     var g = e.Graphics;
                     using var fontTitle = new Font("Segoe UI", 16, FontStyle.Bold);
                     using var fontText = new Font("Segoe UI", 12);
+                    using var fontBarcodeText = new Font("Segoe UI", 10);
                     float y = 30;
 
                     // Rahmen
@@ -50,7 +51,18 @@ namespace KasseApp
                     y += 30;
 
                     // Barcode
-                    DrawBarcode(g, artikel.Barcode, 28, (int)y, 250, 60);
+                    int barcodeX = 28;
+                    int barcodeY = (int)y;
+                    int barcodeWidth = 250;
+                    int barcodeHeight = 60;
+
+                    DrawBarcode(g, artikel.Barcode, barcodeX, barcodeY, barcodeWidth, barcodeHeight);
+
+                    // Barcode-Nummer zentriert unter dem Barcode
+                    float textY = barcodeY + barcodeHeight + 2;
+                    var size = g.MeasureString(artikel.Barcode, fontBarcodeText);
+                    float centeredX = barcodeX + (barcodeWidth - size.Width) / 2f;
+                    g.DrawString(artikel.Barcode, fontBarcodeText, Brushes.Black, centeredX, textY);
                 };
 
                 doc.Print();
@@ -85,6 +97,7 @@ namespace KasseApp
                 {
                     var g = e.Graphics;
                     using var fontText = new Font("Segoe UI", 8);
+                    using var fontBarcodeText = new Font("Segoe UI", 7);
                     float y = 3;
 
                     // Name (evtl. kürzen)
@@ -99,10 +112,18 @@ namespace KasseApp
                     y += 14;
 
                     // kleiner Barcode
+                    int barcodeX = 3;
+                    int barcodeY = (int)y;
                     int barcodeWidth = 120;   // hier bei Bedarf anpassen
                     int barcodeHeight = 30;   // hier bei Bedarf anpassen
 
-                    DrawBarcode(g, artikel.Barcode, 3, (int)y, barcodeWidth, barcodeHeight);
+                    DrawBarcode(g, artikel.Barcode, barcodeX, barcodeY, barcodeWidth, barcodeHeight);
+
+                    // Barcode-Nummer zentriert unter dem Barcode
+                    float textY = barcodeY + barcodeHeight + 1;
+                    var size = g.MeasureString(artikel.Barcode, fontBarcodeText);
+                    float centeredX = barcodeX + (barcodeWidth - size.Width) / 2f;
+                    g.DrawString(artikel.Barcode, fontBarcodeText, Brushes.Black, centeredX, textY);
                 };
 
                 doc.Print();
