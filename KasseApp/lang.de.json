@@ -1,0 +1,13 @@
+﻿{
+  "Title_MainWindow": "Kassensystem",
+  "Label_Search": "Suche",
+  "Button_New": "Neu",
+  "Button_Edit": "Bearbeiten",
+  "Button_Delete": "Löschen",
+  "Button_Pay": "Bezahlen",
+  "Button_Barcode": "Barcode",
+  "Title_BarcodeWindow": "Barcode-Suche",
+  "Label_Barcode": "Barcode",
+  "Message_ErrorDb": "Fehler bei der Datenbankabfrage.",
+  "Message_NoItems": "Keine Artikel im Warenkorb."
+}

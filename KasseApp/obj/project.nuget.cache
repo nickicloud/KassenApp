@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "eepwIuCf/m8=",
+  "success": true,
+  "projectFilePath": "D:\\csharp\\KasseApp\\KasseApp\\KasseApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.0\\microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\9.0.0\\microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.win32.systemevents\\10.0.1\\microsoft.win32.systemevents.10.0.1.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\npgsql\\10.0.1\\npgsql.10.0.1.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\system.drawing.common\\10.0.1\\system.drawing.common.10.0.1.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.11\\microsoft.netcore.app.ref.9.0.11.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.11\\microsoft.windowsdesktop.app.ref.9.0.11.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.11\\microsoft.aspnetcore.app.ref.9.0.11.nupkg.sha512",
+    "C:\\Users\\teewr\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\9.0.11\\microsoft.netcore.app.host.win-x64.9.0.11.nupkg.sha512"
+  ],
+  "logs": []
+}
