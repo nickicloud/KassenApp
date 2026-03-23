@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Input;
 
 namespace KasseApp.Views
 {
@@ -10,7 +11,6 @@ namespace KasseApp.Views
 
         public Artikel Artikel { get; }
         public int Anzahl { get; private set; } = 1;
-        public bool UseA4 { get; private set; } = true;
 
         public LabelPrintWindow(LanguageService lang, LabelPrintService labelService, Artikel artikel)
         {
@@ -42,15 +42,10 @@ namespace KasseApp.Views
             }
 
             Anzahl = n;
-            UseA4 = rbA4.IsChecked == true;
 
             try
             {
-                // Drucken
-                if (UseA4)
-                    _labelService.PrintA4Label(Artikel, Anzahl);
-                else
-                    _labelService.PrintLabelPrinter(Artikel, Anzahl);
+                _labelService.PrintLabelPrinter(Artikel, Anzahl);
 
                 DialogResult = true;
                 Close();
@@ -73,9 +68,9 @@ namespace KasseApp.Views
             Close();
         }
 
-        private void TitleBar_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left)
                 DragMove();
         }
     }

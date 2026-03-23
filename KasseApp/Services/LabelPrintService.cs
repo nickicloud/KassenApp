@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Drawing.Printing;
+using System.Globalization;
+using Microsoft.Extensions.Configuration;
 using ZXing;
 using ZXing.Common;
 
@@ -8,63 +11,45 @@ namespace KasseApp
 {
     public class LabelPrintService
     {
+        private readonly string _receiptPrinterName;
         private readonly string _a4PrinterName;
         private readonly string _labelPrinterName;
+        private readonly double _labelWidthMm;
+        private readonly double _labelHeightMm;
+        private readonly double _labelMarginMm;
 
-        public LabelPrintService(string a4PrinterName, string labelPrinterName)
+        public LabelPrintService(IConfiguration config)
         {
-            _a4PrinterName = a4PrinterName;
-            _labelPrinterName = labelPrinterName;
+            var general = config.GetSection("General");
+            _receiptPrinterName = general["ReceiptPrinterName"];
+            _a4PrinterName = general["A4PrinterName"];
+            _labelPrinterName = general["LabelPrinterName"];
+
+            var label = general.GetSection("Label");
+            _labelWidthMm = ParseDouble(label["WidthMm"]) ?? 35;
+            _labelHeightMm = ParseDouble(label["HeightMm"]) ?? 40;
+            _labelMarginMm = ParseDouble(label["MarginMm"]) ?? 0;
         }
 
-        public void PrintA4Label(Artikel artikel, int anzahl)
+        private static double? ParseDouble(string value)
         {
-            for (int i = 0; i < anzahl; i++)
-            {
-                using var doc = new PrintDocument();
-                doc.PrinterSettings.PrinterName = _a4PrinterName;
-                doc.DocumentName = "Artikel-Etikett (A4)";
-                doc.DefaultPageSettings.PaperSize = new PaperSize("A4", 827, 1169);
-
-                doc.PrintPage += (s, e) =>
-                {
-                    var g = e.Graphics;
-                    using var fontTitle = new Font("Segoe UI", 16, FontStyle.Bold, GraphicsUnit.Pixel);
-                    using var fontText = new Font("Segoe UI", 12, GraphicsUnit.Pixel);
-                    using var fontBarcodeText = new Font("Segoe UI", 10, GraphicsUnit.Pixel);
-
-                    float y = 30;
-                    g.DrawRectangle(Pens.Black, 20, 20, 280, 150);
-                    g.DrawString(artikel.Name, fontTitle, Brushes.Black, 28, y);
-                    y += 35;
-                    g.DrawString($"{artikel.Preis:0.00} €", fontText, Brushes.Black, 28, y);
-                    y += 30;
-
-                    int barcodeX = 28;
-                    int barcodeY = (int)y;
-                    int barcodeWidth = 250;
-                    int barcodeHeight = 60;
-
-                    DrawBarcode(g, artikel.Barcode, barcodeX, barcodeY, barcodeWidth, barcodeHeight);
-
-                    float textY = barcodeY + barcodeHeight + 2;
-                    var size = g.MeasureString(artikel.Barcode, fontBarcodeText);
-                    float centeredX = barcodeX + (barcodeWidth - size.Width) / 2f;
-                    g.DrawString(artikel.Barcode, fontBarcodeText, Brushes.Black, centeredX, textY);
-                };
-
-                doc.Print();
-            }
+            return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double result)
+                ? result
+                : (double?)null;
         }
 
-        /// <summary>
-        /// Name 10pt Bold, Preis & Nummer normal (ohne Bold).
-        /// </summary>
+        public void Print40x20mmLabel(Artikel artikel, int anzahl)
+        {
+            PrintCustomLabel(artikel, anzahl, 40, 20, 0);
+        }
+
         public void PrintLabelPrinter(Artikel artikel, int anzahl)
         {
-            const double widthMm = 35;
-            const double heightMm = 40;
+            PrintCustomLabel(artikel, anzahl, (int)_labelWidthMm, (int)_labelHeightMm, (int)_labelMarginMm);
+        }
 
+        private void PrintCustomLabel(Artikel artikel, int anzahl, int widthMm, int heightMm, int marginMm)
+        {
             int ToHundredthsOfInch(double mm) => (int)Math.Round(mm / 25.4 * 100);
             int paperWidth = ToHundredthsOfInch(widthMm);
             int paperHeight = ToHundredthsOfInch(heightMm);
@@ -73,64 +58,84 @@ namespace KasseApp
             {
                 using var doc = new PrintDocument();
                 doc.PrinterSettings.PrinterName = _labelPrinterName;
-                doc.DocumentName = "Artikel-Etikett (Label)";
+                doc.DocumentName = $"Label {widthMm}x{heightMm}mm";
 
-                var labelSize = new PaperSize("Etikett", paperWidth, paperHeight);
+                var labelSize = new PaperSize($"{widthMm}x{heightMm}", paperWidth, paperHeight);
                 doc.DefaultPageSettings.PaperSize = labelSize;
-                doc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-                doc.OriginAtMargins = false;
+                doc.DefaultPageSettings.Margins = new Margins(marginMm, marginMm, marginMm, marginMm);
+                doc.OriginAtMargins = true;
 
                 doc.PrintPage += (s, e) =>
                 {
                     var g = e.Graphics;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
 
-                    // Name: 10pt Bold (wie gewünscht)
-                    using var fontName = new Font("Segoe UI", 10, FontStyle.Bold, GraphicsUnit.Pixel);
-                    // Preis: 9pt NORMAL (ohne Bold)
-                    using var fontPrice = new Font("Segoe UI", 9, GraphicsUnit.Pixel);
-                    // Barcode-Nummer: 9pt NORMAL (ohne Bold)
-                    using var fontBarcodeText = new Font("Segoe UI", 9, GraphicsUnit.Pixel);
+                    // sicherer Bereich innerhalb der Margins [web:333]
+                    Rectangle mb = e.MarginBounds;
 
-                    RectangleF pa = e.PageSettings.PrintableArea;
-                    float x0 = pa.X;
-                    float y0 = pa.Y;
-                    float w = pa.Width;
-                    float h = pa.Height;
+                    float x0 = mb.X;
+                    float y0 = mb.Y;
+                    float w = mb.Width;
+                    float h = mb.Height;
 
-                    // 1. Name fett
-                    float nameX = x0 + w * 0.08f;
-                    float nameY = y0 + h * 0.06f;
-                    float nameWidth = w * 0.84f;
-                    var nameRect = new RectangleF(nameX, nameY, nameWidth, h * 0.25f);
+                    // 40x20: bisschen Reserve unten, sonst verschwindet Nummer gern
+                    float padX = w * 0.06f;
+                    float padTop = h * 0.10f;
+                    float padBottom = h * 0.30f; // kleiner extra Abstand nach unten
 
-                    using var nameFormat = new StringFormat 
-                    { 
-                        Alignment = StringAlignment.Near, 
-                        LineAlignment = StringAlignment.Near, 
-                        FormatFlags = StringFormatFlags.LineLimit 
+                    float x = x0 + padX;
+                    float y = y0 + padTop;
+                    float iw = w - 2 * padX;
+                    float ih = h - padTop - padBottom;
+
+                    using var center = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center
                     };
-                    g.DrawString(artikel.Name, fontName, Brushes.Black, nameRect, nameFormat);
 
-                    float y = nameRect.Bottom + h * 0.025f;
+                    float scale = heightMm / 20f;
 
-                    // 2. Preis normal
-                    string priceText = $"{artikel.Preis:0.00} €";
-                    g.DrawString(priceText, fontPrice, Brushes.Black, nameX, y);
-                    y += fontPrice.Height + h * 0.04f;
+                    using var fontPrice = new Font("Segoe UI", 13.5f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
+                    using var fontNumber = new Font("Segoe UI", 7.8f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
 
-                    // 3. Barcode klein
-                    int barcodeHeight = (int)(h * 0.18f);
-                    int barcodeWidth = (int)(w * 0.70f);
-                    int barcodeX = (int)(x0 + (w - barcodeWidth) / 2f);
-                    int barcodeY = (int)y;
+                    float gapAfterPrice = ih * 0.04f;
+                    float gapBarcodeToNumber = Math.Max(1f, ih * 0.008f); // nahe am Barcode
 
-                    DrawBarcode(g, artikel.Barcode, barcodeX, barcodeY, barcodeWidth, barcodeHeight);
+                    // Höhen
+                    float priceH = Math.Max(fontPrice.Height, ih * 0.30f);
+                    float numberH = Math.Max(fontNumber.Height, ih * 0.14f);
 
-                    // 4. Barcode-Nummer normal
-                    float numY = barcodeY + barcodeHeight + h * 0.015f;
-                    var numSize = g.MeasureString(artikel.Barcode, fontBarcodeText);
-                    float numX = x0 + (w - numSize.Width) / 2f;
-                    g.DrawString(artikel.Barcode, fontBarcodeText, Brushes.Black, numX, numY);
+                    float barcodeBlockH = ih - priceH - numberH - gapAfterPrice - gapBarcodeToNumber;
+
+                    // Barcode soll komplett sein -> Minimum erzwingen
+                    float minBarcode = ih * 0.44f;
+                    if (barcodeBlockH < minBarcode)
+                    {
+                        float need = minBarcode - barcodeBlockH;
+                        numberH = Math.Max(fontNumber.Height, numberH - need);
+                        barcodeBlockH = ih - priceH - numberH - gapAfterPrice - gapBarcodeToNumber;
+                    }
+
+                    // 1) Preis
+                    var priceRect = new RectangleF(x, y, iw, priceH);
+                    g.DrawString($"{artikel.Preis:0.00} €", fontPrice, Brushes.Black, priceRect, center);
+                    y += priceH + gapAfterPrice;
+
+                    // 2) Barcode (Grafik)
+                    int bW = (int)(iw * 0.98f);
+                    int bH = (int)(barcodeBlockH * 0.90f);
+                    int bX = (int)(x + (iw - bW) / 2f);
+                    int bY = (int)(y + (barcodeBlockH - bH) / 2f);
+
+                    DrawBarcode(g, artikel.Barcode, bX, bY, bW, bH);
+                    y += barcodeBlockH + gapBarcodeToNumber;
+
+                    // 3) Nummer unter Barcode
+                    var numberRect = new RectangleF(x, y, iw, numberH);
+                    g.DrawString(artikel.Barcode ?? "", fontNumber, Brushes.Black, numberRect, center);
 
                     e.HasMorePages = false;
                 };
@@ -139,9 +144,21 @@ namespace KasseApp
             }
         }
 
+        public void PrintReceipt(Artikel artikel, int anzahl)
+        {
+            for (int i = 0; i < anzahl; i++)
+            {
+                using var doc = new PrintDocument();
+                doc.PrinterSettings.PrinterName = _receiptPrinterName;
+                doc.DocumentName = "Quittung";
+                doc.Print();
+            }
+        }
+
         private void DrawBarcode(Graphics g, string text, int x, int y, int width, int height)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
+            if (width <= 1 || height <= 1) return;
 
             var writer = new BarcodeWriterPixelData
             {
@@ -150,30 +167,45 @@ namespace KasseApp
                 {
                     Height = height,
                     Width = width,
-                    Margin = 1
+                    Margin = 0,
+                    PureBarcode = true
                 }
             };
 
             var pixelData = writer.Write(text);
 
-            using var bmp = new Bitmap(pixelData.Width, pixelData.Height,
-                System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            var bmpData = bmp.LockBits(
-                new Rectangle(0, 0, bmp.Width, bmp.Height),
-                System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                bmp.PixelFormat);
-
-            System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bmpData.Scan0, pixelData.Pixels.Length);
-            bmp.UnlockBits(bmpData);
-
+            using var bmp = CreateBitmapFromPixelData(pixelData);
             g.DrawImage(bmp, new Rectangle(x, y, width, height));
         }
 
-        private void DrawWrappedTextInRect(Graphics g, string text, Font font, Brush brush, RectangleF rect, StringFormat format)
+        private static Bitmap CreateBitmapFromPixelData(ZXing.Rendering.PixelData pixelData)
         {
-            if (string.IsNullOrWhiteSpace(text)) return;
-            g.DrawString(text, font, brush, rect, format);
+            var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppArgb);
+
+            var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            var bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
+
+            try
+            {
+                int bytesPerPixel = 4;
+                int srcStride = pixelData.Width * bytesPerPixel;
+                int dstStride = bmpData.Stride;
+
+                var src = (byte[])pixelData.Pixels;
+
+                for (int y = 0; y < pixelData.Height; y++)
+                {
+                    IntPtr dstRow = bmpData.Scan0 + (y * dstStride);
+                    int srcOffset = y * srcStride;
+                    System.Runtime.InteropServices.Marshal.Copy(src, srcOffset, dstRow, srcStride);
+                }
+            }
+            finally
+            {
+                bmp.UnlockBits(bmpData);
+            }
+
+            return bmp;
         }
     }
 }

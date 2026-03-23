@@ -56,3 +56,16 @@ D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\PdfSharp.Snippets.dll
 D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\PdfSharp.System.dll
 D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\PdfSharp.WPFonts.dll
 D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\PdfSharp.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.Configuration.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.Configuration.Binder.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.Configuration.Json.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.FileProviders.Physical.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\System.IO.Pipelines.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\System.Text.Encodings.Web.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\System.Text.Json.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
+D:\csharp\KasseApp\KasseApp\bin\Debug\net9.0-windows\runtimes\win\lib\net9.0\System.Text.Encodings.Web.dll

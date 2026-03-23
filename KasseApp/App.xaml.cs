@@ -4,9 +4,6 @@ using System.Windows;
 
 namespace KasseApp;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
 }

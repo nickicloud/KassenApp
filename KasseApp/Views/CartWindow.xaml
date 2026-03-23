@@ -60,7 +60,7 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- ContextMenu ohne Icon-Spalte -->
+        <!-- ContextMenu -->
         <Style TargetType="ContextMenu">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -83,7 +83,7 @@
             </Setter>
         </Style>
 
-        <!-- MenuItem nur Text, keine Icon-Spalte -->
+        <!-- MenuItem Text -->
         <Style TargetType="MenuItem">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -180,7 +180,6 @@
                           GridLinesVisibility="None"
                           HeadersVisibility="Column">
                     <DataGrid.ContextMenu>
-                        <!-- nutzt globale Styles, kein eigenes Resources-Template -->
                         <ContextMenu>
                             <MenuItem x:Name="miDeletePos"
                                       Header="Position löschen"

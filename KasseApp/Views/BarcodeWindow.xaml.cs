@@ -24,7 +24,6 @@ namespace KasseApp.Views
             Title = _lang.T("BarcodeWindow_Title");
             txtTitleBar.Text = _lang.T("BarcodeWindow_Title");        // z.B. "Barcode-Scan"
             btnClose.Content = _lang.T("BarcodeWindow_Cancel");       // Text für „Schließen“
-            // txtArtikelInfo kann später auch dynamische Texte bekommen (z.B. Name/Preis)
         }
 
         private async Task LoadArtikelAsync(string barcode)
@@ -59,7 +58,6 @@ namespace KasseApp.Views
 
         private async void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            // Bestätigen – Fenster mit ausgewähltem Artikel schließen
             if (SelectedArtikel == null)
             {
                 await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
@@ -73,7 +71,6 @@ namespace KasseApp.Views
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            // Optional: Eingabe leeren
             txtBarcodeInput.Text = "";
         }
 

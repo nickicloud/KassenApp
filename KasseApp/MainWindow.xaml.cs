@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,6 +9,8 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using KasseApp.Views;
+using Microsoft.Extensions.Configuration;
+using Npgsql; // für PostgresException (UniqueViolation 23505)
 
 namespace KasseApp
 {
@@ -17,16 +20,20 @@ namespace KasseApp
         private readonly LanguageService _lang;
         private readonly ReceiptService _receiptService;
         private readonly LabelPrintService _labelPrintService;
+        private readonly IConfiguration _configuration;
 
-        private ObservableCollection<Artikel> _artikelListe = new();
-        private readonly ObservableCollection<WarenkorbPosition> _warenkorb = new();
-        private readonly ObservableCollection<ScanHistoryEntry> _barcodeHistory = new();
+        private ObservableCollection<Artikel> _artikelListe = new ObservableCollection<Artikel>();
+        private readonly ObservableCollection<WarenkorbPosition> _warenkorb = new ObservableCollection<WarenkorbPosition>();
+        private readonly ObservableCollection<ScanHistoryEntry> _barcodeHistory = new ObservableCollection<ScanHistoryEntry>();
 
         private bool _hideZeroStock = false;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Fix für "jeder zweite Artikel ist weiß"
+            ApplyRowColorFix();
 
             var config = ConfigService.Load();
 
@@ -36,17 +43,95 @@ namespace KasseApp
             _artikelRepo = new ArtikelRepository(config.Database.ToConnectionString());
             _receiptService = new ReceiptService(config.General.ReceiptPrinterName);
 
-            _labelPrintService = new LabelPrintService(
-                config.General.A4PrinterName,
-                config.General.LabelPrinterName);
+            _configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("config.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            _labelPrintService = new LabelPrintService(_configuration);
 
             ApplyLanguageTexts();
+            ApplyColumnVisibilityFromConfig(); // nur lesen
+
             _ = LoadArtikelAsync();
 
             lstBarcodeHistory.ItemsSource = _barcodeHistory;
             ClearDetails();
         }
 
+        // ----------------------------
+        // Fix: Alternating Row Colors
+        // ----------------------------
+        private void ApplyRowColorFix()
+        {
+            dgArtikel.AlternationCount = 2; // AlternationIndex aktivieren [web:198]
+
+            var baseStyle = dgArtikel.RowStyle; // falls XAML schon RowStyle hat
+            var style = new Style(typeof(DataGridRow), baseStyle);
+
+            style.Setters.Add(new Setter(DataGridRow.BackgroundProperty, Brushes.Transparent));
+            style.Setters.Add(new Setter(DataGridRow.ForegroundProperty, Brushes.White));
+            style.Setters.Add(new Setter(DataGridRow.FontSizeProperty, 13.0));
+            style.Setters.Add(new Setter(DataGridRow.CursorProperty, Cursors.Hand));
+            style.Setters.Add(new Setter(UIElement.SnapsToDevicePixelsProperty, true));
+
+            // Odd rows
+            var odd = new Trigger
+            {
+                Property = ItemsControl.AlternationIndexProperty,
+                Value = 1
+            };
+            odd.Setters.Add(new Setter(DataGridRow.BackgroundProperty,
+                (Brush)new BrushConverter().ConvertFromString("#FF111827")));
+            style.Triggers.Add(odd);
+
+            // Hover
+            var hover = new Trigger { Property = DataGridRow.IsMouseOverProperty, Value = true };
+            hover.Setters.Add(new Setter(DataGridRow.BackgroundProperty,
+                (Brush)new BrushConverter().ConvertFromString("#FF111827")));
+            style.Triggers.Add(hover);
+
+            // Selected
+            var selected = new Trigger { Property = DataGridRow.IsSelectedProperty, Value = true };
+            selected.Setters.Add(new Setter(DataGridRow.BackgroundProperty,
+                (Brush)new BrushConverter().ConvertFromString("#402563EB")));
+            selected.Setters.Add(new Setter(DataGridRow.BorderBrushProperty,
+                (Brush)new BrushConverter().ConvertFromString("#FF2563EB")));
+            selected.Setters.Add(new Setter(DataGridRow.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
+            style.Triggers.Add(selected);
+
+            dgArtikel.RowStyle = style;
+        }
+
+        // ----------------------------
+        // Columns visibility (config)
+        // ----------------------------
+        private void ApplyColumnVisibilityFromConfig()
+        {
+            bool showBarcode = _configuration.GetValue("Ui:Columns:Barcode", true);
+            bool showName = _configuration.GetValue("Ui:Columns:Name", true);
+            bool showPreis = _configuration.GetValue("Ui:Columns:Preis", true);
+            bool showBestand = _configuration.GetValue("Ui:Columns:Bestand", true);
+
+            SetColumnVisibility("Barcode", showBarcode);
+            SetColumnVisibility("Name", showName);
+            SetColumnVisibility("Preis", showPreis);
+            SetColumnVisibility("Bestand", showBestand);
+        }
+
+        private void SetColumnVisibility(string member, bool visible)
+        {
+            var col = dgArtikel.Columns.FirstOrDefault(c =>
+                string.Equals(c.SortMemberPath, member, StringComparison.OrdinalIgnoreCase));
+
+            if (col == null) return;
+
+            col.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // ----------------------------
+        // Language texts
+        // ----------------------------
         private void ApplyLanguageTexts()
         {
             Title = _lang.T("Title_MainWindow");
@@ -73,6 +158,9 @@ namespace KasseApp
             miAddToCart.Header = _lang.T("Context_Product_AddToCart");
         }
 
+        // ----------------------------
+        // Load + filter
+        // ----------------------------
         private async Task LoadArtikelAsync()
         {
             try
@@ -80,6 +168,8 @@ namespace KasseApp
                 var liste = await _artikelRepo.GetAllAsync();
                 _artikelListe = new ObservableCollection<Artikel>(liste);
                 dgArtikel.ItemsSource = _artikelListe;
+
+                ApplyColumnVisibilityFromConfig();
                 ApplyZeroFilter();
             }
             catch
@@ -110,17 +200,44 @@ namespace KasseApp
             };
         }
 
-        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => ApplyZeroFilter();
+
+        // ----------------------------
+        // Sorting: Preis -> Name
+        // ----------------------------
+        public void dgArtikel_Sorting(object sender, DataGridSortingEventArgs e)
         {
-            ApplyZeroFilter();
+            if (!string.Equals(e.Column.SortMemberPath, "Preis", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            e.Handled = true;
+
+            var view = CollectionViewSource.GetDefaultView(dgArtikel.ItemsSource);
+            if (view == null) return;
+
+            var dir = e.Column.SortDirection != ListSortDirection.Ascending
+                ? ListSortDirection.Ascending
+                : ListSortDirection.Descending;
+
+            using (view.DeferRefresh())
+            {
+                view.SortDescriptions.Clear();
+                view.SortDescriptions.Add(new SortDescription("Preis", dir));
+                view.SortDescriptions.Add(new SortDescription("Name", dir)); // sekundär ABC [web:2]
+            }
+
+            foreach (var col in dgArtikel.Columns)
+                col.SortDirection = null;
+
+            e.Column.SortDirection = dir;
         }
 
+        // ----------------------------
+        // Barcode button
+        // ----------------------------
         private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
-            var window = new BarcodeWindow(_artikelRepo, _lang)
-            {
-                Owner = this
-            };
+            var window = new BarcodeWindow(_artikelRepo, _lang) { Owner = this };
 
             if (window.ShowDialog() == true && window.SelectedArtikel != null)
             {
@@ -132,11 +249,7 @@ namespace KasseApp
                 var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
                 if (pos == null)
                 {
-                    pos = new WarenkorbPosition
-                    {
-                        Artikel = artikel,
-                        Menge = 1
-                    };
+                    pos = new WarenkorbPosition { Artikel = artikel, Menge = 1 };
                     _warenkorb.Add(pos);
                 }
                 else
@@ -144,18 +257,20 @@ namespace KasseApp
                     pos.Menge++;
                 }
 
-                var entry = new ScanHistoryEntry
+                _barcodeHistory.Add(new ScanHistoryEntry
                 {
                     Barcode = artikel.Barcode,
                     Name = artikel.Name,
                     Preis = artikel.Preis,
                     BestandNachScan = artikel.Bestand,
                     MengeImWarenkorb = pos.Menge
-                };
-                _barcodeHistory.Add(entry);
+                });
             }
         }
 
+        // ----------------------------
+        // History selection
+        // ----------------------------
         private void lstBarcodeHistory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (lstBarcodeHistory.SelectedItem is not ScanHistoryEntry entry)
@@ -180,13 +295,14 @@ namespace KasseApp
             lblDetailMenge.Text = $"{_lang.T("History_Detail_MengeImWarenkorb")}: -";
         }
 
-        private DataGridRow? GetDataGridRowAtPoint(DataGrid grid, Point point)
+        // ----------------------------
+        // Context menu selection
+        // ----------------------------
+        private DataGridRow GetDataGridRowAtPoint(DataGrid grid, Point point)
         {
-            var element = grid.InputHitTest(point) as DependencyObject;
+            DependencyObject element = grid.InputHitTest(point) as DependencyObject;
             while (element != null && element is not DataGridRow)
-            {
                 element = VisualTreeHelper.GetParent(element);
-            }
             return element as DataGridRow;
         }
 
@@ -205,13 +321,11 @@ namespace KasseApp
                 dgArtikel.SelectedItem = null;
                 if (FindResource("cmEmpty") is ContextMenu emptyMenu)
                 {
-                    var miRefresh = emptyMenu.Items[0] as MenuItem;
+                    var miRefresh = emptyMenu.Items.Count > 0 ? emptyMenu.Items[0] as MenuItem : null;
                     if (miRefresh != null)
                         miRefresh.Header = _lang.T("Context_Empty_Refresh");
 
-                    var miZero = emptyMenu.Items
-                        .OfType<MenuItem>()
-                        .FirstOrDefault(m => m.IsCheckable);
+                    var miZero = emptyMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.IsCheckable);
                     if (miZero != null)
                     {
                         miZero.Header = _lang.T("Context_Empty_HideZero");
@@ -225,25 +339,18 @@ namespace KasseApp
 
         private void Menu_CopyId_Click(object sender, RoutedEventArgs e)
         {
-            if (dgArtikel.SelectedItem is not Artikel a)
-                return;
-
+            if (dgArtikel.SelectedItem is not Artikel a) return;
             Clipboard.SetText(a.Barcode);
         }
 
         private void Menu_AddToCart_Click(object sender, RoutedEventArgs e)
         {
-            if (dgArtikel.SelectedItem is not Artikel a)
-                return;
+            if (dgArtikel.SelectedItem is not Artikel a) return;
 
             var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == a.Barcode);
             if (pos == null)
             {
-                pos = new WarenkorbPosition
-                {
-                    Artikel = a,
-                    Menge = 1
-                };
+                pos = new WarenkorbPosition { Artikel = a, Menge = 1 };
                 _warenkorb.Add(pos);
             }
             else
@@ -261,10 +368,7 @@ namespace KasseApp
             });
         }
 
-        private async void Menu_Refresh_Click(object sender, RoutedEventArgs e)
-        {
-            await LoadArtikelAsync();
-        }
+        private async void Menu_Refresh_Click(object sender, RoutedEventArgs e) => await LoadArtikelAsync();
 
         private void Menu_ToggleZero_Click(object sender, RoutedEventArgs e)
         {
@@ -272,33 +376,26 @@ namespace KasseApp
             ApplyZeroFilter();
         }
 
+        // ----------------------------
+        // Pay
+        // ----------------------------
         private async void BtnPay_Click(object sender, RoutedEventArgs e)
         {
-            var cartWindow = new CartWindow(_lang, _warenkorb)
-            {
-                Owner = this
-            };
-
+            var cartWindow = new CartWindow(_lang, _warenkorb) { Owner = this };
             var result = cartWindow.ShowDialog();
 
-            if (result != true || _warenkorb.Count == 0)
-            {
-                return;
-            }
+            if (result != true || _warenkorb.Count == 0) return;
 
             foreach (var pos in _warenkorb)
             {
                 pos.Artikel.Bestand -= pos.Menge;
-                if (pos.Artikel.Bestand < 0)
-                    pos.Artikel.Bestand = 0;
+                if (pos.Artikel.Bestand < 0) pos.Artikel.Bestand = 0;
             }
 
             _receiptService.PrintReceipt(_warenkorb.ToList());
 
             foreach (var pos in _warenkorb)
-            {
                 await _artikelRepo.UpdateBestandAsync(pos.Artikel.Barcode, pos.Artikel.Bestand);
-            }
 
             await LoadArtikelAsync();
             _warenkorb.Clear();
@@ -306,27 +403,71 @@ namespace KasseApp
             ClearDetails();
         }
 
+        // ----------------------------
+        // NEW: prevent crash on duplicate barcode
+        // ----------------------------
         private async void BtnNew_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ArtikelDialog(_lang)
-            {
-                Owner = this
-            };
+            var dialog = new ArtikelDialog(_lang) { Owner = this };
 
-            if (dialog.ShowDialog() == true)
-            {
-                var artikel = dialog.Artikel;
+            if (dialog.ShowDialog() != true)
+                return;
 
+            var artikel = dialog.Artikel;
+
+            // schneller UI-Check (freundlich, aber DB check ist entscheidend)
+            if (IsBarcodeAlreadyInList(artikel.Barcode))
+            {
+                MessageBox.Show(
+                    "Dieser Barcode existiert bereits. Bitte einen anderen Barcode eingeben.",
+                    "Fehler",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning); // MessageBox API [web:210]
+                return;
+            }
+
+            try
+            {
                 await _artikelRepo.InsertAsync(artikel);
                 _artikelListe.Add(artikel);
                 ApplyZeroFilter();
             }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                // PostgreSQL unique_violation 23505 => Duplicate Barcode [web:212]
+                MessageBox.Show(
+                    "Dieser Barcode existiert bereits. Bitte einen anderen Barcode eingeben.",
+                    "Fehler",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning); // [web:210]
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Fehler beim Speichern des Artikels:\n" + ex.Message,
+                    "Fehler",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error); // [web:210]
+            }
         }
 
+        private bool IsBarcodeAlreadyInList(string barcode)
+        {
+            if (string.IsNullOrWhiteSpace(barcode))
+                return false;
+
+            barcode = barcode.Trim();
+
+            return _artikelListe.Any(a =>
+                string.Equals(a.Barcode, barcode, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // ----------------------------
+        // Edit / Delete / Label
+        // ----------------------------
         private async void BtnEdit_Click(object sender, RoutedEventArgs e)
         {
-            if (dgArtikel.SelectedItem is not Artikel selected)
-                return;
+            if (dgArtikel.SelectedItem is not Artikel selected) return;
 
             var copy = new Artikel
             {
@@ -336,10 +477,7 @@ namespace KasseApp
                 Bestand = selected.Bestand
             };
 
-            var dialog = new ArtikelDialog(_lang, copy)
-            {
-                Owner = this
-            };
+            var dialog = new ArtikelDialog(_lang, copy) { Owner = this };
 
             if (dialog.ShowDialog() == true)
             {
@@ -355,8 +493,7 @@ namespace KasseApp
 
         private async void BtnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (dgArtikel.SelectedItem is not Artikel selected)
-                return;
+            if (dgArtikel.SelectedItem is not Artikel selected) return;
 
             string text = string.Format(_lang.T("Dialog_Delete_Text"), selected.Name);
 
@@ -368,7 +505,6 @@ namespace KasseApp
             _artikelListe.Remove(selected);
         }
 
-        // HIER: Bestand beim Etikettendruck erhöhen und speichern
         private async void BtnPrintLabel_Click(object sender, RoutedEventArgs e)
         {
             if (dgArtikel.SelectedItem is not Artikel selected)
@@ -377,55 +513,50 @@ namespace KasseApp
                 return;
             }
 
-            var window = new LabelPrintWindow(_lang, _labelPrintService, selected)
-            {
-                Owner = this
-            };
-
+            var window = new LabelPrintWindow(_lang, _labelPrintService, selected) { Owner = this };
             var result = window.ShowDialog();
+
             if (result == true)
             {
-                // Bestand im Artikel erhöhen
                 selected.Bestand += window.Anzahl;
-
-                // In DB speichern
                 await _artikelRepo.UpdateBestandAsync(selected.Barcode, selected.Bestand);
 
-                // Grid aktualisieren + Filter anwenden
                 dgArtikel.Items.Refresh();
                 ApplyZeroFilter();
             }
         }
 
+        private async void BtnNew_Click_Alt(object sender, RoutedEventArgs e)
+        {
+            // Nicht benutzt – nur Platzhalter, falls du irgendwo doppelte Handler hast.
+            await Task.CompletedTask;
+        }
+
+        // ----------------------------
+        // Double click
+        // ----------------------------
         private void dgArtikel_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (dgArtikel.SelectedItem is Artikel)
-            {
                 BtnEdit_Click(sender, e);
-            }
         }
 
+        // ----------------------------
+        // Window controls
+        // ----------------------------
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
                 DragMove();
         }
 
-        private void Minimize_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
+        private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
         private void Maximize_Click(object sender, RoutedEventArgs e)
         {
-            WindowState = WindowState == WindowState.Maximized
-                ? WindowState.Normal
-                : WindowState.Maximized;
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
 }

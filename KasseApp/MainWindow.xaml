@@ -79,7 +79,6 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="4">
-                            <!-- Direkter ItemsHost, kein Grid mit Icon-Leiste -->
                             <StackPanel IsItemsHost="True"
                                         Margin="0"/>
                         </Border>
@@ -272,6 +271,7 @@
                     <DataGrid x:Name="dgArtikel"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
+                              Sorting="dgArtikel_Sorting"
                               MouseDoubleClick="dgArtikel_MouseDoubleClick"
                               PreviewMouseRightButtonDown="dgArtikel_PreviewMouseRightButtonDown"
                               CanUserAddRows="False"
@@ -283,11 +283,8 @@
                               Background="Transparent"
                               BorderThickness="0"
                               Foreground="White"
-                              HorizontalGridLinesBrush="#FF374151"
-                              VerticalGridLinesBrush="#FF374151"
                               AlternatingRowBackground="#FF111827">
 
-                        <!-- Rechtsklick-Menü für Artikel -->
                         <DataGrid.ContextMenu>
                             <ContextMenu x:Name="cmArtikel">
                                 <MenuItem x:Name="miCopyId"
@@ -308,38 +305,24 @@
                                 <Setter Property="BorderBrush" Value="#FF374151"/>
                                 <Setter Property="Padding" Value="8,0,8,0"/>
                             </Style>
-
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="FontSize" Value="13"/>
-                                <Setter Property="Cursor" Value="Hand"/>
-                                <Setter Property="SnapsToDevicePixels" Value="True"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#FF111827"/>
-                                    </Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#402563EB"/>
-                                        <Setter Property="BorderBrush" Value="#FF2563EB"/>
-                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
                         </DataGrid.Resources>
 
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="colBarcode"
                                                 Width="*"
+                                                SortMemberPath="Barcode"
                                                 Binding="{Binding Barcode}" />
                             <DataGridTextColumn x:Name="colName"
                                                 Width="2*"
+                                                SortMemberPath="Name"
                                                 Binding="{Binding Name}" />
                             <DataGridTextColumn x:Name="colPreis"
                                                 Width="*"
+                                                SortMemberPath="Preis"
                                                 Binding="{Binding Preis}" />
                             <DataGridTextColumn x:Name="colBestand"
                                                 Width="*"
+                                                SortMemberPath="Bestand"
                                                 Binding="{Binding Bestand}" />
                         </DataGrid.Columns>
                     </DataGrid>

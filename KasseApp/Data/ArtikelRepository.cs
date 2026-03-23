@@ -110,8 +110,7 @@ namespace KasseApp
 
             await cmd.ExecuteNonQueryAsync();
         }
-
-        // NEU: Bestand für einen Artikel direkt setzen
+        
         public async Task UpdateBestandAsync(string barcode, int neuerBestand)
         {
             await using var conn = new NpgsqlConnection(_connectionString);
