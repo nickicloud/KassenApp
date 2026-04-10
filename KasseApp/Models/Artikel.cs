@@ -6,5 +6,7 @@
         public string Name { get; set; } = "";
         public decimal Preis { get; set; }
         public int Bestand { get; set; }
+        public int ZusatzZahl { get; set; }
+        public string ZusatzText { get; set; } = "";
     }
 }

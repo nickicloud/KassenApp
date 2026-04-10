@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace KasseApp.Views
 {
@@ -9,6 +10,11 @@ namespace KasseApp.Views
         private readonly LanguageService _lang;
 
         public Artikel? SelectedArtikel { get; private set; }
+        
+        // Diese Flagge sagt dem MainWindow, ob wir verkaufen (false) 
+        // oder das Lager erhöhen (true) wollen.
+        public bool IsLagerBuchung { get; private set; } = false;
+        public bool IsLagerRemove { get; private set; } = false;
 
         public BarcodeWindow(ArtikelRepository repo, LanguageService lang)
         {
@@ -22,8 +28,8 @@ namespace KasseApp.Views
         private void ApplyLang()
         {
             Title = _lang.T("BarcodeWindow_Title");
-            txtTitleBar.Text = _lang.T("BarcodeWindow_Title");        // z.B. "Barcode-Scan"
-            btnClose.Content = _lang.T("BarcodeWindow_Cancel");       // Text für „Schließen“
+            txtTitleBar.Text = _lang.T("BarcodeWindow_Title");
+            btnClose.Content = _lang.T("BarcodeWindow_Cancel");
         }
 
         private async Task LoadArtikelAsync(string barcode)
@@ -43,19 +49,21 @@ namespace KasseApp.Views
 
             if (artikel == null)
             {
-                txtArtikelInfo.Text = _lang.T("BarcodeWindow_Info"); // z.B. „Bitte Barcode scannen oder eingeben.“
+                txtArtikelInfo.Text = _lang.T("BarcodeWindow_Info");
             }
             else
             {
+                // Anzeige von Name, Preis und aktuellem Bestand
                 txtArtikelInfo.Text = $"{artikel.Name} – {artikel.Preis:0.00} € (Bestand: {artikel.Bestand})";
             }
         }
 
-        private async void txtBarcodeInput_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private async void txtBarcodeInput_TextChanged(object sender, TextChangedEventArgs e)
         {
             await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
         }
 
+        // Button: Zum Warenkorb hinzufügen (Verkauf)
         private async void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedArtikel == null)
@@ -65,6 +73,35 @@ namespace KasseApp.Views
                     return;
             }
 
+            IsLagerBuchung = false; // Sicherstellen, dass es kein Lager-Zusatz ist
+            DialogResult = true;
+            Close();
+        }
+
+        // Button: ZusatzZahl++ (Lager-Eingang)
+        private async void btnZusatzZahlAdd_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedArtikel == null)
+            {
+                await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
+                if (SelectedArtikel == null)
+                    return;
+            }
+
+            IsLagerBuchung = true; // Markierung für das Lager-Update
+            DialogResult = true;
+            Close();
+        }
+        private async void btnZusatzZahlRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedArtikel == null)
+            {
+                await LoadArtikelAsync(txtBarcodeInput.Text.Trim());
+                if (SelectedArtikel == null)
+                    return;
+            }
+
+            IsLagerRemove = true; // Markierung für das Lager-Update
             DialogResult = true;
             Close();
         }

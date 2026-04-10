@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Artikel"
-        Height="310"
+        Height="410"
         Width="420"
         WindowStartupLocation="CenterOwner"
         Background="#FF0F172A"
@@ -123,6 +123,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
@@ -164,6 +165,20 @@
                                Text="Bestand"
                                Style="{StaticResource DialogLabelStyle}"/>
                     <TextBox x:Name="txtBestand"
+                             Style="{StaticResource DialogTextBoxStyle}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                    <TextBlock x:Name="lblZusatzZahl"
+                               Text="ZusatzZahl"
+                               Style="{StaticResource DialogLabelStyle}"/>
+                    <TextBox x:Name="txtZusatzZahl"
+                             Style="{StaticResource DialogTextBoxStyle}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                    <TextBlock x:Name="lblZusatzText"
+                               Text="ZusatzText"
+                               Style="{StaticResource DialogLabelStyle}"/>
+                    <TextBox x:Name="txtZusatzText"
                              Style="{StaticResource DialogTextBoxStyle}"/>
                 </StackPanel>
             </Grid>

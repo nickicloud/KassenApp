@@ -324,6 +324,14 @@
                                                 Width="*"
                                                 SortMemberPath="Bestand"
                                                 Binding="{Binding Bestand}" />
+                            <DataGridTextColumn x:Name="colZusatzZahl"
+                                                Width="*"
+                                                SortMemberPath="ZusatzZahl"
+                                                Binding="{Binding ZusatzZahl}" />
+                            <DataGridTextColumn x:Name="colZusatzText"
+                                                Width="*"
+                                                SortMemberPath="ZusatzText"
+                                                Binding="{Binding ZusatzText}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>

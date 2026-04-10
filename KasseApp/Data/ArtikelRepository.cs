@@ -21,7 +21,7 @@ namespace KasseApp
             await conn.OpenAsync();
 
             var cmd = new NpgsqlCommand(
-                "SELECT barcode, name, preis, bestand FROM artikel ORDER BY name",
+                "SELECT barcode, name, preis, bestand, zusatzzahl, zusatztext FROM artikel ORDER BY name",
                 conn);
 
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -32,7 +32,9 @@ namespace KasseApp
                     Barcode = reader.GetString(0),
                     Name = reader.GetString(1),
                     Preis = reader.GetDecimal(2),
-                    Bestand = reader.GetInt32(3)
+                    Bestand = reader.GetInt32(3),
+                    ZusatzZahl = reader.GetInt32(4),
+                    ZusatzText = reader.GetString(5)
                 });
             }
 
@@ -45,7 +47,7 @@ namespace KasseApp
             await conn.OpenAsync();
 
             var cmd = new NpgsqlCommand(
-                "SELECT barcode, name, preis, bestand FROM artikel WHERE barcode = @barcode",
+                "SELECT barcode, name, preis, bestand, zusatzzahl, zusatztext FROM artikel WHERE barcode = @barcode",
                 conn);
             cmd.Parameters.AddWithValue("barcode", barcode);
 
@@ -57,7 +59,9 @@ namespace KasseApp
                     Barcode = reader.GetString(0),
                     Name = reader.GetString(1),
                     Preis = reader.GetDecimal(2),
-                    Bestand = reader.GetInt32(3)
+                    Bestand = reader.GetInt32(3),
+                    ZusatzZahl = reader.GetInt32(4),
+                    ZusatzText = reader.GetString(5)
                 };
             }
 
@@ -70,13 +74,15 @@ namespace KasseApp
             await conn.OpenAsync();
 
             var cmd = new NpgsqlCommand(
-                "INSERT INTO artikel (barcode, name, preis, bestand) VALUES (@barcode, @name, @preis, @bestand)",
+                "INSERT INTO artikel (barcode, name, preis, bestand, zusatzzahl, zusatztext) VALUES (@barcode, @name, @preis, @bestand, @zusatzzahl, @zusatztext)",
                 conn);
 
             cmd.Parameters.AddWithValue("barcode", artikel.Barcode);
             cmd.Parameters.AddWithValue("name", artikel.Name);
             cmd.Parameters.AddWithValue("preis", artikel.Preis);
             cmd.Parameters.AddWithValue("bestand", artikel.Bestand);
+            cmd.Parameters.AddWithValue("zusatzzahl", artikel.ZusatzZahl);
+            cmd.Parameters.AddWithValue("zusatztext", artikel.ZusatzText);
 
             await cmd.ExecuteNonQueryAsync();
         }
@@ -87,13 +93,15 @@ namespace KasseApp
             await conn.OpenAsync();
 
             var cmd = new NpgsqlCommand(
-                "UPDATE artikel SET name = @name, preis = @preis, bestand = @bestand WHERE barcode = @barcode",
+                "UPDATE artikel SET name = @name, preis = @preis, bestand = @bestand, zusatzzahl = @zusatzzahl, zusatztext = @zusatztext WHERE barcode = @barcode",
                 conn);
 
             cmd.Parameters.AddWithValue("barcode", artikel.Barcode);
             cmd.Parameters.AddWithValue("name", artikel.Name);
             cmd.Parameters.AddWithValue("preis", artikel.Preis);
             cmd.Parameters.AddWithValue("bestand", artikel.Bestand);
+            cmd.Parameters.AddWithValue("zusatzzahl", artikel.ZusatzZahl);
+            cmd.Parameters.AddWithValue("zusatztext", artikel.ZusatzText);
 
             await cmd.ExecuteNonQueryAsync();
         }

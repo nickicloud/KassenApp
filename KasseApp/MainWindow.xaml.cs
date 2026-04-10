@@ -11,11 +11,85 @@ using System.Windows.Media;
 using KasseApp.Views;
 using Microsoft.Extensions.Configuration;
 using Npgsql; // für PostgresException (UniqueViolation 23505)
+using System.Net.Http;
+using System.Reflection;
+using System.Diagnostics;
+using System.IO;
 
 namespace KasseApp
 {
     public partial class MainWindow : Window
     {
+        // Updates
+        private readonly string _currentVersion = "3.0.0"; // Deine aktuelle Version
+        private readonly string _updateUrl = "https://nickicloud.de/kassenapp/version.txt";
+        private readonly string _downloadUrl = "https://nickicloud.de/kassenapp/KasseApp_Update.zip";
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    // Timeout hinzufügen, falls der Server nicht erreichbar ist
+                    client.Timeout = TimeSpan.FromSeconds(5);
+
+                    string response = await client.GetStringAsync(_updateUrl);
+            
+                    // WICHTIG: .Trim() entfernt versteckte Zeilenumbrüche (\n)
+                    string serverVersion = response.Trim();
+
+                    // Zum Testen: Zeig dir die Versionen kurz an
+                    // MessageBox.Show($"Lokal: '{_currentVersion}' - Server: '{serverVersion}'");
+
+                    if (serverVersion != _currentVersion)
+                    {
+                        var result = MessageBox.Show(
+                            $"Neue Version {serverVersion} verfügbar. Jetzt laden?",
+                            "Update",
+                            MessageBoxButton.YesNo);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            StartUpdateProcess(_downloadUrl);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Wenn hier ein Fehler kommt, ist der Server nicht erreichbar
+                Debug.WriteLine("Update-Check Error: " + ex.Message);
+            }
+        }
+
+        private void StartUpdateProcess(string downloadUrl)
+        {
+            // Wir prüfen, ob die Updater.exe existiert
+            string updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
+
+            if (File.Exists(updaterPath))
+            {
+                // Startet den Updater und übergibt die Download-URL als Argument
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = updaterPath,
+                    Arguments = downloadUrl,
+                    UseShellExecute = true
+                };
+        
+                Process.Start(startInfo);
+        
+                // Haupt-App sofort beenden, damit Dateien nicht gesperrt sind
+                Application.Current.Shutdown();
+            }
+            else
+            {
+                MessageBox.Show("Updater.exe nicht gefunden. Bitte manuell aktualisieren.");
+            }
+        }
+        
+        // -----------------------------------------------------------------
+
         private readonly ArtikelRepository _artikelRepo;
         private readonly LanguageService _lang;
         private readonly ReceiptService _receiptService;
@@ -31,6 +105,7 @@ namespace KasseApp
         public MainWindow()
         {
             InitializeComponent();
+            _ = CheckForUpdatesAsync();
 
             // Fix für "jeder zweite Artikel ist weiß"
             ApplyRowColorFix();
@@ -150,6 +225,8 @@ namespace KasseApp
             colName.Header = _lang.T("Grid_Col_Name");
             colPreis.Header = _lang.T("Grid_Col_Preis");
             colBestand.Header = _lang.T("Grid_Col_Bestand");
+            colZusatzZahl.Header = _lang.T("Grid_Col_ZusatzZahl");
+            colZusatzText.Header = _lang.T("Grid_Col_ZusatzText");
 
             lblHistoryHeader.Text = _lang.T("History_Header");
             lblDetailHeader.Text = _lang.T("History_Detail_Header");
@@ -172,9 +249,10 @@ namespace KasseApp
                 ApplyColumnVisibilityFromConfig();
                 ApplyZeroFilter();
             }
-            catch
+            catch (Exception ex)
             {
                 MessageBox.Show(_lang.T("Message_ErrorDb"));
+                Console.WriteLine(ex);
             }
         }
 
@@ -235,36 +313,73 @@ namespace KasseApp
         // ----------------------------
         // Barcode button
         // ----------------------------
+        // In MainWindow.xaml.cs -> BtnBarcode_Click anpassen
+        public void RefreshArtikelListe()
+        {
+            dgArtikel.Items.Refresh();
+        }
         private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
             var window = new BarcodeWindow(_artikelRepo, _lang) { Owner = this };
+            
 
+            // Wenn der Dialog mit "OK" (DialogResult = true) geschlossen wurde
             if (window.ShowDialog() == true && window.SelectedArtikel != null)
             {
                 var artikel = window.SelectedArtikel;
 
-                txtSearch.Text = artikel.Barcode;
-                await LoadArtikelAsync();
-
-                var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
-                if (pos == null)
+                if (window.IsLagerBuchung)
                 {
-                    pos = new WarenkorbPosition { Artikel = artikel, Menge = 1 };
-                    _warenkorb.Add(pos);
+                    // --- HIER PASSIERT DIE MAGIE FÜR btnZusatzZahlAdd ---
+                    artikel.ZusatzZahl++; // Zahl im Objekt erhöhen
+            
+                    // WICHTIG: In der Datenbank speichern!
+                    await _artikelRepo.UpdateAsync(artikel);
+            
+                    // Die Anzeige im DataGrid aktualisieren
+                    dgArtikel.Items.Refresh();
+            
+                    // Optional: Suchfeld leeren, damit man sieht, dass etwas passiert ist
+                    txtSearch.Text = "";
+                } else if (window.IsLagerRemove)
+                {
+                    artikel.ZusatzZahl--; // Zahl im Objekt erhöhen
+            
+                    // WICHTIG: In der Datenbank speichern!
+                    await _artikelRepo.UpdateAsync(artikel);
+            
+                    // Die Anzeige im DataGrid aktualisieren
+                    dgArtikel.Items.Refresh();
+            
+                    // Optional: Suchfeld leeren, damit man sieht, dass etwas passiert ist
+                    txtSearch.Text = "";
                 }
                 else
                 {
-                    pos.Menge++;
-                }
+                    // --- NORMALE LOGIK FÜR btnAdd (Warenkorb) ---
+                    txtSearch.Text = artikel.Barcode;
+                    await LoadArtikelAsync();
 
-                _barcodeHistory.Add(new ScanHistoryEntry
-                {
-                    Barcode = artikel.Barcode,
-                    Name = artikel.Name,
-                    Preis = artikel.Preis,
-                    BestandNachScan = artikel.Bestand,
-                    MengeImWarenkorb = pos.Menge
-                });
+                    var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
+                    if (pos == null)
+                    {
+                        pos = new WarenkorbPosition { Artikel = artikel, Menge = 1 };
+                        _warenkorb.Add(pos);
+                    }
+                    else
+                    {
+                        pos.Menge++;
+                    }
+
+                    _barcodeHistory.Add(new ScanHistoryEntry
+                    {
+                        Barcode = artikel.Barcode,
+                        Name = artikel.Name,
+                        Preis = artikel.Preis,
+                        BestandNachScan = artikel.Bestand,
+                        MengeImWarenkorb = pos.Menge
+                    });
+                }
             }
         }
 
@@ -474,7 +589,10 @@ namespace KasseApp
                 Barcode = selected.Barcode,
                 Name = selected.Name,
                 Preis = selected.Preis,
-                Bestand = selected.Bestand
+                Bestand = selected.Bestand,
+                ZusatzZahl = selected.ZusatzZahl,
+                ZusatzText = selected.ZusatzText
+                
             };
 
             var dialog = new ArtikelDialog(_lang, copy) { Owner = this };
@@ -484,6 +602,8 @@ namespace KasseApp
                 selected.Name = dialog.Artikel.Name;
                 selected.Preis = dialog.Artikel.Preis;
                 selected.Bestand = dialog.Artikel.Bestand;
+                selected.ZusatzZahl = dialog.Artikel.ZusatzZahl;
+                selected.ZusatzText = dialog.Artikel.ZusatzText;
 
                 await _artikelRepo.UpdateAsync(selected);
                 dgArtikel.Items.Refresh();

@@ -13,6 +13,8 @@
   "Grid_Col_Name": "Name",
   "Grid_Col_Preis": "Preis",
   "Grid_Col_Bestand": "Bestand",
+  "Grid_Col_ZusatzZahl": "ZusatzZahl",
+  "Grid_Col_ZusatzText": "ZusatzText",
 
   "History_Header": "Barcode-Verlauf",
   "History_Detail_Header": "Details",
@@ -37,6 +39,8 @@
   "ArtikelDialog_Name": "Name",
   "ArtikelDialog_Preis": "Preis",
   "ArtikelDialog_Bestand": "Bestand",
+  "ArtikelDialog_ZusatzZahl": "ZusatzZahl",
+  "ArtikelDialog_ZusatzText": "ZusatzText",
   "ArtikelDialog_Ok": "Speichern",
   "ArtikelDialog_Cancel": "Abbrechen",
 

@@ -31,6 +31,8 @@ namespace KasseApp.Views
             txtName.Text = existing.Name;
             txtPreis.Text = existing.Preis.ToString(CultureInfo.InvariantCulture);
             txtBestand.Text = existing.Bestand.ToString();
+            txtZusatzZahl.Text = existing.ZusatzZahl.ToString();
+            txtZusatzText.Text = existing.ZusatzText.ToString();
         }
 
 
@@ -43,6 +45,8 @@ namespace KasseApp.Views
             lblName.Text = _lang.T("ArtikelDialog_Name");
             lblPreis.Text = _lang.T("ArtikelDialog_Preis");
             lblBestand.Text = _lang.T("ArtikelDialog_Bestand");
+            lblZusatzZahl.Text = _lang.T("ArtikelDialog_ZusatzZahl");
+            lblZusatzText.Text = _lang.T("ArtikelDialog_ZusatzText");
 
             btnOk.Content = _lang.T("ArtikelDialog_Ok");
             btnCancel.Content = _lang.T("ArtikelDialog_Cancel");
@@ -59,6 +63,10 @@ namespace KasseApp.Views
 
             if (int.TryParse(txtBestand.Text, out var best))
                 Artikel.Bestand = best;
+            if (int.TryParse(txtZusatzZahl.Text, out var zahl))
+                Artikel.ZusatzZahl = zahl;
+            Artikel.ZusatzText = txtZusatzText.Text.Trim();
+
 
             DialogResult = true;
             Close();
