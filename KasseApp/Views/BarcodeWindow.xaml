@@ -177,7 +177,7 @@
                         Style="{StaticResource BaseButtonStyle}"
                         Click="btnZusatzZahlAdd_Click"/>
                 <Button x:Name="btnZusatzZahlRemove"
-                        Content="R"
+                        Content="L"
                         Width="44"
                         Height="44"
                         Margin="0,0,8,0"
