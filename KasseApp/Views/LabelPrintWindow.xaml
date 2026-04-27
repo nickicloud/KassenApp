@@ -148,14 +148,16 @@
                     <TextBlock Text="Druckformat"
                                Style="{StaticResource DialogLabelStyle}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <RadioButton x:Name="rbLabelPrinter"
+                                     Content="Etikettendrucker"
+                                     IsChecked="True"
+                                     Foreground="White"
+                                     Margin="0,0,2,0"/>
                         <RadioButton x:Name="rbA4"
                                      Content="A4"
                                      Foreground="White"
-                                     IsChecked="True"
+                                     
                                      Margin="0,0,12,0"/>
-                        <RadioButton x:Name="rbLabelPrinter"
-                                     Content="Etikettendrucker"
-                                     Foreground="White"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>

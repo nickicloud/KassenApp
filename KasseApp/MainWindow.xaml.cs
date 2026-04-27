@@ -21,7 +21,7 @@ namespace KasseApp
     public partial class MainWindow : Window
     {
         // Updates
-        private readonly string _currentVersion = "3.0.1"; // Deine aktuelle Version
+        private readonly string _currentVersion = "3.1.0"; // Deine aktuelle Version
         private readonly string _updateUrl = "https://nickicloud.de/kassenapp/version.txt";
         private readonly string _downloadUrl = "https://nickicloud.de/kassenapp/KasseApp_Update.zip";
         private async Task CheckForUpdatesAsync()

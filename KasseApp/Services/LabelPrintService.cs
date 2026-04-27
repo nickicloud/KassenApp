@@ -60,8 +60,7 @@ namespace KasseApp
                 doc.PrinterSettings.PrinterName = _labelPrinterName;
                 doc.DocumentName = $"Label {widthMm}x{heightMm}mm";
 
-                var labelSize = new PaperSize($"{widthMm}x{heightMm}", paperWidth, paperHeight);
-                doc.DefaultPageSettings.PaperSize = labelSize;
+                doc.DefaultPageSettings.PaperSize = new PaperSize("Custom", paperWidth, paperHeight);
                 doc.DefaultPageSettings.Margins = new Margins(marginMm, marginMm, marginMm, marginMm);
                 doc.OriginAtMargins = true;
 
@@ -69,73 +68,51 @@ namespace KasseApp
                 {
                     var g = e.Graphics;
                     g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                    // sicherer Bereich innerhalb der Margins [web:333]
-                    Rectangle mb = e.MarginBounds;
-
-                    float x0 = mb.X;
-                    float y0 = mb.Y;
+                    RectangleF mb = e.MarginBounds;
+                    float x = mb.X;
+                    float y = mb.Y;
                     float w = mb.Width;
                     float h = mb.Height;
-
-                    // 40x20: bisschen Reserve unten, sonst verschwindet Nummer gern
-                    float padX = w * 0.06f;
-                    float padTop = h * 0.10f;
-                    float padBottom = h * 0.30f; // kleiner extra Abstand nach unten
-
-                    float x = x0 + padX;
-                    float y = y0 + padTop;
-                    float iw = w - 2 * padX;
-                    float ih = h - padTop - padBottom;
 
                     using var center = new StringFormat
                     {
                         Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
+                        LineAlignment = StringAlignment.Near
                     };
 
-                    float scale = heightMm / 20f;
+                    float scale = heightMm / 22f;
 
-                    using var fontPrice = new Font("Segoe UI", 13.5f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
-                    using var fontNumber = new Font("Segoe UI", 7.8f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
-
-                    float gapAfterPrice = ih * 0.04f;
-                    float gapBarcodeToNumber = Math.Max(1f, ih * 0.008f); // nahe am Barcode
-
-                    // Höhen
-                    float priceH = Math.Max(fontPrice.Height, ih * 0.30f);
-                    float numberH = Math.Max(fontNumber.Height, ih * 0.14f);
-
-                    float barcodeBlockH = ih - priceH - numberH - gapAfterPrice - gapBarcodeToNumber;
-
-                    // Barcode soll komplett sein -> Minimum erzwingen
-                    float minBarcode = ih * 0.44f;
-                    if (barcodeBlockH < minBarcode)
-                    {
-                        float need = minBarcode - barcodeBlockH;
-                        numberH = Math.Max(fontNumber.Height, numberH - need);
-                        barcodeBlockH = ih - priceH - numberH - gapAfterPrice - gapBarcodeToNumber;
-                    }
-
-                    // 1) Preis
-                    var priceRect = new RectangleF(x, y, iw, priceH);
+                    // 1) NAME (2 Zeilen Umbruch)
+                    using var fontName = new Font("Segoe UI", 7.0f * scale + 2f, FontStyle.Regular, GraphicsUnit.Pixel);
+                    float nameH = fontName.Height * 2f; 
+                    var nameRect = new RectangleF(x, y, w, nameH);
+                    g.DrawString(artikel.Name ?? "", fontName, Brushes.Black, nameRect, center);
+                    
+                    // 2) PREIS
+                    using var fontPrice = new Font("Segoe UI", 11.0f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
+                    float priceY = y + nameH - 4; 
+                    var priceRect = new RectangleF(x, priceY, w, fontPrice.Height);
                     g.DrawString($"{artikel.Preis:0.00} €", fontPrice, Brushes.Black, priceRect, center);
-                    y += priceH + gapAfterPrice;
 
-                    // 2) Barcode (Grafik)
-                    int bW = (int)(iw * 0.98f);
-                    int bH = (int)(barcodeBlockH * 0.90f);
-                    int bX = (int)(x + (iw - bW) / 2f);
-                    int bY = (int)(y + (barcodeBlockH - bH) / 2f);
+                    // 3) BARCODE (Höhe reduziert auf 60% des verfügbaren Platzes)
+                    using var fontNumber = new Font("Segoe UI", 6.0f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
+                    float numberH = fontNumber.Height;
+                    float barcodeY = priceY + fontPrice.Height - 8;
+                    float availableBarcodeSpace = (mb.Bottom - barcodeY) - numberH - 2;
+                    float barcodeH = availableBarcodeSpace * 0.4f; // HIER: Reduziert auf 60%
 
-                    DrawBarcode(g, artikel.Barcode, bX, bY, bW, bH);
-                    y += barcodeBlockH + gapBarcodeToNumber;
-
-                    // 3) Nummer unter Barcode
-                    var numberRect = new RectangleF(x, y, iw, numberH);
-                    g.DrawString(artikel.Barcode ?? "", fontNumber, Brushes.Black, numberRect, center);
+                    if (barcodeH > 5)
+                    {
+                        // Zentrierung des Barcodes im verfügbaren Block
+                        float centeredBarcodeY = barcodeY + (availableBarcodeSpace - barcodeH - numberH) / 2;
+                        DrawBarcode(g, artikel.Barcode, (int)x, (int)centeredBarcodeY, (int)w, (int)barcodeH);
+                        
+                        // 4) NUMMER (Direkt unter Barcode)
+                        var numberRect = new RectangleF(x, centeredBarcodeY + barcodeH + 1, w, numberH - 2);
+                        g.DrawString(artikel.Barcode ?? "", fontNumber, Brushes.Black, numberRect, center);
+                    }
 
                     e.HasMorePages = false;
                 };
@@ -157,54 +134,34 @@ namespace KasseApp
 
         private void DrawBarcode(Graphics g, string text, int x, int y, int width, int height)
         {
-            if (string.IsNullOrWhiteSpace(text)) return;
-            if (width <= 1 || height <= 1) return;
-
-            var writer = new BarcodeWriterPixelData
+            if (string.IsNullOrWhiteSpace(text) || width <= 5 || height <= 5) return;
+            try
             {
-                Format = BarcodeFormat.CODE_128,
-                Options = new EncodingOptions
+                var writer = new BarcodeWriterPixelData
                 {
-                    Height = height,
-                    Width = width,
-                    Margin = 0,
-                    PureBarcode = true
-                }
-            };
-
-            var pixelData = writer.Write(text);
-
-            using var bmp = CreateBitmapFromPixelData(pixelData);
-            g.DrawImage(bmp, new Rectangle(x, y, width, height));
+                    Format = BarcodeFormat.CODE_128,
+                    Options = new EncodingOptions { Height = height, Width = width, Margin = 0, PureBarcode = true }
+                };
+                var pixelData = writer.Write(text);
+                using var bmp = CreateBitmapFromPixelData(pixelData);
+                g.DrawImage(bmp, new Rectangle(x, y, width, height));
+            }
+            catch { }
         }
 
         private static Bitmap CreateBitmapFromPixelData(ZXing.Rendering.PixelData pixelData)
         {
             var bmp = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppArgb);
-
             var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
             var bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
-
             try
             {
-                int bytesPerPixel = 4;
-                int srcStride = pixelData.Width * bytesPerPixel;
-                int dstStride = bmpData.Stride;
-
-                var src = (byte[])pixelData.Pixels;
-
-                for (int y = 0; y < pixelData.Height; y++)
-                {
-                    IntPtr dstRow = bmpData.Scan0 + (y * dstStride);
-                    int srcOffset = y * srcStride;
-                    System.Runtime.InteropServices.Marshal.Copy(src, srcOffset, dstRow, srcStride);
-                }
+                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bmpData.Scan0, pixelData.Pixels.Length);
             }
             finally
             {
                 bmp.UnlockBits(bmpData);
             }
-
             return bmp;
         }
     }
