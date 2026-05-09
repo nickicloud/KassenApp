@@ -148,6 +148,27 @@
                            FontSize="14"
                            Foreground="#FF9CA3AF"
                            TextWrapping="Wrap"/>
+                <!-- Kompakter Automatik-Bereich -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <CheckBox x:Name="chkAutoAdd" Content="Auto" Foreground="White" 
+                              VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
+    
+                    <ComboBox x:Name="cmbAutoMode" Width="100" Height="22" SelectedIndex="0" 
+                              FontSize="11" Background="#FF111827" Foreground="White" 
+                              BorderBrush="#FF374151" VerticalContentAlignment="Center">
+                        <ComboBox.Resources>
+                            <!-- Dieser Hack sorgt dafür, dass die Systemfarben lokal überschrieben werden -->
+                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#FF111827" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="White" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF2563EB" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White" />
+                        </ComboBox.Resources>
+        
+                        <ComboBoxItem Content="Warenkorb (✓)" />
+                        <ComboBoxItem Content="Markt + (H)" />
+                        <ComboBoxItem Content="Markt - (L)" />
+                    </ComboBox>
+                </StackPanel>
             </Grid>
 
             <!-- Buttons unten -->

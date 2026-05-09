@@ -21,7 +21,7 @@ namespace KasseApp
     public partial class MainWindow : Window
     {
         // Updates
-        private readonly string _currentVersion = "3.1.0"; // Deine aktuelle Version
+        private readonly string _currentVersion = "3.2.2"; // Deine aktuelle Version
         private readonly string _updateUrl = "https://nickicloud.de/kassenapp/version.txt";
         private readonly string _downloadUrl = "https://nickicloud.de/kassenapp/KasseApp_Update.zip";
         private async Task CheckForUpdatesAsync()
@@ -318,48 +318,39 @@ namespace KasseApp
         {
             dgArtikel.Items.Refresh();
         }
-        private async void BtnBarcode_Click(object sender, RoutedEventArgs e)
+        // ----------------------------
+// Barcode button
+// ----------------------------
+        private void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
             var window = new BarcodeWindow(_artikelRepo, _lang) { Owner = this };
-            
 
-            // Wenn der Dialog mit "OK" (DialogResult = true) geschlossen wurde
-            if (window.ShowDialog() == true && window.SelectedArtikel != null)
+            // Wir abonnieren das neue Event. 
+            // Dieser Code wird jedes Mal ausgeführt, wenn im BarcodeWindow ein Button gedrückt wird.
+            window.ArtikelProzessiert += async (w) =>
             {
-                var artikel = window.SelectedArtikel;
+                var artikel = w.SelectedArtikel;
+                if (artikel == null) return;
 
-                if (window.IsLagerBuchung)
+                if (w.IsLagerBuchung)
                 {
-                    // --- HIER PASSIERT DIE MAGIE FÜR btnZusatzZahlAdd ---
-                    artikel.ZusatzZahl++; // Zahl im Objekt erhöhen
-            
-                    // WICHTIG: In der Datenbank speichern!
+                    // --- Logik für Lager-Eingang (H) ---
+                    artikel.ZusatzZahl++; 
                     await _artikelRepo.UpdateAsync(artikel);
-            
-                    // Die Anzeige im DataGrid aktualisieren
                     dgArtikel.Items.Refresh();
-            
-                    // Optional: Suchfeld leeren, damit man sieht, dass etwas passiert ist
-                    txtSearch.Text = "";
-                } else if (window.IsLagerRemove)
+                } 
+                else if (w.IsLagerRemove)
                 {
-                    artikel.ZusatzZahl--; // Zahl im Objekt erhöhen
-            
-                    // WICHTIG: In der Datenbank speichern!
+                    // --- Logik für Lager-Ausgang (L) ---
+                    artikel.ZusatzZahl--; 
                     await _artikelRepo.UpdateAsync(artikel);
-            
-                    // Die Anzeige im DataGrid aktualisieren
                     dgArtikel.Items.Refresh();
-            
-                    // Optional: Suchfeld leeren, damit man sieht, dass etwas passiert ist
-                    txtSearch.Text = "";
                 }
                 else
                 {
-                    // --- NORMALE LOGIK FÜR btnAdd (Warenkorb) ---
-                    txtSearch.Text = artikel.Barcode;
-                    await LoadArtikelAsync();
-
+                    // --- Normale Logik für Warenkorb (✓) ---
+                    // Da wir im selben Fenster bleiben, laden wir zur Sicherheit 
+                    // die aktuellsten Daten, falls Bestände sich geändert haben.
                     var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
                     if (pos == null)
                     {
@@ -380,7 +371,12 @@ namespace KasseApp
                         MengeImWarenkorb = pos.Menge
                     });
                 }
-            }
+            };
+
+            // ShowDialog blockiert hier zwar das MainWindow, 
+            // aber der Code im Event-Handler (oben) läuft trotzdem jedes Mal, 
+            // wenn im BarcodeWindow ein Button geklickt wird.
+            window.ShowDialog();
         }
 
         // ----------------------------
