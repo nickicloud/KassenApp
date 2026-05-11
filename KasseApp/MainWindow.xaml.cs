@@ -10,7 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using KasseApp.Views;
 using Microsoft.Extensions.Configuration;
-using Npgsql; // für PostgresException (UniqueViolation 23505)
+using Npgsql; // Postgres
 using System.Net.Http;
 using System.Reflection;
 using System.Diagnostics;
