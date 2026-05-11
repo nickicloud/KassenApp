@@ -30,15 +30,15 @@ namespace KasseApp
             {
                 using (var client = new HttpClient())
                 {
-                    // Timeout hinzufügen, falls der Server nicht erreichbar ist
+                    // Timeout, falls der Server nicht erreichbar ist
                     client.Timeout = TimeSpan.FromSeconds(5);
 
                     string response = await client.GetStringAsync(_updateUrl);
             
-                    // WICHTIG: .Trim() entfernt versteckte Zeilenumbrüche (\n)
+                    // .Trim() entfernt versteckte Zeilenumbrüche (\n)
                     string serverVersion = response.Trim();
 
-                    // Zum Testen: Zeig dir die Versionen kurz an
+                    // Zeig dir die Versionen kurz an
                     // MessageBox.Show($"Lokal: '{_currentVersion}' - Server: '{serverVersion}'");
 
                     if (serverVersion != _currentVersion)
@@ -64,7 +64,7 @@ namespace KasseApp
 
         private void StartUpdateProcess(string downloadUrl)
         {
-            // Wir prüfen, ob die Updater.exe existiert
+            // Updater.exe existiert?
             string updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
 
             if (File.Exists(updaterPath))
@@ -106,8 +106,7 @@ namespace KasseApp
         {
             InitializeComponent();
             _ = CheckForUpdatesAsync();
-
-            // Fix für "jeder zweite Artikel ist weiß"
+            
             ApplyRowColorFix();
 
             var config = ConfigService.Load();
@@ -126,7 +125,7 @@ namespace KasseApp
             _labelPrintService = new LabelPrintService(_configuration);
 
             ApplyLanguageTexts();
-            ApplyColumnVisibilityFromConfig(); // nur lesen
+            ApplyColumnVisibilityFromConfig(); 
 
             _ = LoadArtikelAsync();
 
@@ -134,14 +133,12 @@ namespace KasseApp
             ClearDetails();
         }
 
-        // ----------------------------
-        // Fix: Alternating Row Colors
-        // ----------------------------
+
         private void ApplyRowColorFix()
         {
-            dgArtikel.AlternationCount = 2; // AlternationIndex aktivieren [web:198]
+            dgArtikel.AlternationCount = 2; 
 
-            var baseStyle = dgArtikel.RowStyle; // falls XAML schon RowStyle hat
+            var baseStyle = dgArtikel.RowStyle; 
             var style = new Style(typeof(DataGridRow), baseStyle);
 
             style.Setters.Add(new Setter(DataGridRow.BackgroundProperty, Brushes.Transparent));
@@ -150,7 +147,7 @@ namespace KasseApp
             style.Setters.Add(new Setter(DataGridRow.CursorProperty, Cursors.Hand));
             style.Setters.Add(new Setter(UIElement.SnapsToDevicePixelsProperty, true));
 
-            // Odd rows
+
             var odd = new Trigger
             {
                 Property = ItemsControl.AlternationIndexProperty,
@@ -313,20 +310,14 @@ namespace KasseApp
         // ----------------------------
         // Barcode button
         // ----------------------------
-        // In MainWindow.xaml.cs -> BtnBarcode_Click anpassen
         public void RefreshArtikelListe()
         {
             dgArtikel.Items.Refresh();
         }
-        // ----------------------------
-// Barcode button
-// ----------------------------
         private void BtnBarcode_Click(object sender, RoutedEventArgs e)
         {
             var window = new BarcodeWindow(_artikelRepo, _lang) { Owner = this };
-
-            // Wir abonnieren das neue Event. 
-            // Dieser Code wird jedes Mal ausgeführt, wenn im BarcodeWindow ein Button gedrückt wird.
+            
             window.ArtikelProzessiert += async (w) =>
             {
                 var artikel = w.SelectedArtikel;
@@ -349,8 +340,6 @@ namespace KasseApp
                 else
                 {
                     // --- Normale Logik für Warenkorb (✓) ---
-                    // Da wir im selben Fenster bleiben, laden wir zur Sicherheit 
-                    // die aktuellsten Daten, falls Bestände sich geändert haben.
                     var pos = _warenkorb.FirstOrDefault(p => p.Artikel.Barcode == artikel.Barcode);
                     if (pos == null)
                     {
@@ -372,10 +361,7 @@ namespace KasseApp
                     });
                 }
             };
-
-            // ShowDialog blockiert hier zwar das MainWindow, 
-            // aber der Code im Event-Handler (oben) läuft trotzdem jedes Mal, 
-            // wenn im BarcodeWindow ein Button geklickt wird.
+            
             window.ShowDialog();
         }
 
@@ -515,7 +501,7 @@ namespace KasseApp
         }
 
         // ----------------------------
-        // NEW: prevent crash on duplicate barcode
+        // Bugfix: prevent crash on duplicate barcode
         // ----------------------------
         private async void BtnNew_Click(object sender, RoutedEventArgs e)
         {
@@ -525,15 +511,14 @@ namespace KasseApp
                 return;
 
             var artikel = dialog.Artikel;
-
-            // schneller UI-Check (freundlich, aber DB check ist entscheidend)
+            
             if (IsBarcodeAlreadyInList(artikel.Barcode))
             {
                 MessageBox.Show(
                     "Dieser Barcode existiert bereits. Bitte einen anderen Barcode eingeben.",
                     "Fehler",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Warning); // MessageBox API [web:210]
+                    MessageBoxImage.Warning); 
                 return;
             }
 
@@ -545,12 +530,11 @@ namespace KasseApp
             }
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
-                // PostgreSQL unique_violation 23505 => Duplicate Barcode [web:212]
                 MessageBox.Show(
                     "Dieser Barcode existiert bereits. Bitte einen anderen Barcode eingeben.",
                     "Fehler",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Warning); // [web:210]
+                    MessageBoxImage.Warning); 
             }
             catch (Exception ex)
             {
@@ -558,7 +542,7 @@ namespace KasseApp
                     "Fehler beim Speichern des Artikels:\n" + ex.Message,
                     "Fehler",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Error); // [web:210]
+                    MessageBoxImage.Error); 
             }
         }
 
@@ -644,7 +628,7 @@ namespace KasseApp
 
         private async void BtnNew_Click_Alt(object sender, RoutedEventArgs e)
         {
-            // Nicht benutzt – nur Platzhalter, falls du irgendwo doppelte Handler hast.
+            // Nicht benutzt: nur Platzhalter
             await Task.CompletedTask;
         }
 

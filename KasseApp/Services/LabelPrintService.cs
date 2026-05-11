@@ -83,33 +83,30 @@ namespace KasseApp
                     };
 
                     float scale = heightMm / 22f;
-
-                    // 1) NAME (2 Zeilen Umbruch)
+                    
                     using var fontName = new Font("Segoe UI", 7.0f * scale + 2f, FontStyle.Regular, GraphicsUnit.Pixel);
                     float nameH = fontName.Height * 2f; 
                     var nameRect = new RectangleF(x, y, w, nameH);
                     g.DrawString(artikel.Name ?? "", fontName, Brushes.Black, nameRect, center);
                     
-                    // 2) PREIS
                     using var fontPrice = new Font("Segoe UI", 11.0f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
                     float priceY = y + nameH - 4; 
                     var priceRect = new RectangleF(x, priceY, w, fontPrice.Height);
                     g.DrawString($"{artikel.Preis:0.00} €", fontPrice, Brushes.Black, priceRect, center);
-
-                    // 3) BARCODE (Höhe reduziert auf 60% des verfügbaren Platzes)
+                    
                     using var fontNumber = new Font("Segoe UI", 6.0f * scale, FontStyle.Bold, GraphicsUnit.Pixel);
                     float numberH = fontNumber.Height;
                     float barcodeY = priceY + fontPrice.Height - 8;
                     float availableBarcodeSpace = (mb.Bottom - barcodeY) - numberH - 2;
-                    float barcodeH = availableBarcodeSpace * 0.4f; // HIER: Reduziert auf 60%
+                    float barcodeH = availableBarcodeSpace * 0.4f; 
 
                     if (barcodeH > 5)
                     {
-                        // Zentrierung des Barcodes im verfügbaren Block
+                        // Zentrierung des Barcodes
                         float centeredBarcodeY = barcodeY + (availableBarcodeSpace - barcodeH - numberH) / 2;
                         DrawBarcode(g, artikel.Barcode, (int)x, (int)centeredBarcodeY, (int)w, (int)barcodeH);
                         
-                        // 4) NUMMER (Direkt unter Barcode)
+                        // NUMMER (Direkt unter Barcode)
                         var numberRect = new RectangleF(x, centeredBarcodeY + barcodeH + 1, w, numberH - 2);
                         g.DrawString(artikel.Barcode ?? "", fontNumber, Brushes.Black, numberRect, center);
                     }
