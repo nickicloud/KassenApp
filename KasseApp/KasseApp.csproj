@@ -21,10 +21,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include="obj\Debug\net9.0-windows\Updater.csproj.FileListAbsolute.txt" />
+        <Content Include="obj\Debug\net9.0-windows\Updater.deps.json" />
+        <Content Include="obj\Debug\net9.0-windows\Updater.runtimeconfig.json" />
+        <Content Include="obj\Debug\net9.0-windows\Updater.sourcelink.json" />
         <None Remove="config.json" />
-        <Content Include="config.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
         <None Remove="Lang\lang.de.json" />
         <Content Include="Lang\lang.de.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -45,6 +46,10 @@
         <XamlRuntime>Wpf</XamlRuntime>
         <SubType>Designer</SubType>
       </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="obj\Debug\net9.0-windows\Updater.GlobalUsings.g.cs" />
     </ItemGroup>
 
 

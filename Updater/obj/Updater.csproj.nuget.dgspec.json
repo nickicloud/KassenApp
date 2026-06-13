@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\csharp\\KasseApp\\KasseApp\\KasseApp.csproj": {}
+    "D:\\csharp\\KasseApp\\Updater\\Updater.csproj": {}
   },
   "projects": {
-    "D:\\csharp\\KasseApp\\KasseApp\\KasseApp.csproj": {
+    "D:\\csharp\\KasseApp\\Updater\\Updater.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\csharp\\KasseApp\\KasseApp\\KasseApp.csproj",
-        "projectName": "KasseApp",
-        "projectPath": "D:\\csharp\\KasseApp\\KasseApp\\KasseApp.csproj",
+        "projectUniqueName": "D:\\csharp\\KasseApp\\Updater\\Updater.csproj",
+        "projectName": "Updater",
+        "projectPath": "D:\\csharp\\KasseApp\\Updater\\Updater.csproj",
         "packagesPath": "C:\\Users\\teewr\\.nuget\\packages\\",
-        "outputPath": "D:\\csharp\\KasseApp\\KasseApp\\obj\\",
+        "outputPath": "D:\\csharp\\KasseApp\\Updater\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\teewr\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -46,37 +46,11 @@
         "net9.0-windows7.0": {
           "targetAlias": "net9.0-windows",
           "dependencies": {
-            "Microsoft.Extensions.Configuration": {
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
               "target": "Package",
-              "version": "[10.0.1, )"
-            },
-            "Microsoft.Extensions.Configuration.Binder": {
-              "target": "Package",
-              "version": "[10.0.1, )"
-            },
-            "Microsoft.Extensions.Configuration.Json": {
-              "target": "Package",
-              "version": "[10.0.1, )"
-            },
-            "Newtonsoft.Json": {
-              "target": "Package",
-              "version": "[13.0.4, )"
-            },
-            "Npgsql": {
-              "target": "Package",
-              "version": "[10.0.1, )"
-            },
-            "PDFsharp": {
-              "target": "Package",
-              "version": "[6.2.3, )"
-            },
-            "System.Drawing.Common": {
-              "target": "Package",
-              "version": "[10.0.1, )"
-            },
-            "ZXing.Net": {
-              "target": "Package",
-              "version": "[0.16.11, )"
+              "version": "[9.0.11, )",
+              "autoReferenced": true
             }
           },
           "imports": [
@@ -96,6 +70,10 @@
               "version": "[9.0.11, 9.0.11]"
             },
             {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[9.0.11, 9.0.11]"
+            },
+            {
               "name": "Microsoft.NETCore.App.Host.win-x64",
               "version": "[9.0.11, 9.0.11]"
             },
@@ -104,19 +82,29 @@
               "version": "[9.0.11, 9.0.11]"
             },
             {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[9.0.11, 9.0.11]"
+            },
+            {
               "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[9.0.11, 9.0.11]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
               "version": "[9.0.11, 9.0.11]"
             }
           ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
-            },
-            "Microsoft.WindowsDesktop.App.WPF": {
-              "privateAssets": "none"
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

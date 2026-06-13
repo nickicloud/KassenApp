@@ -1,0 +1,2 @@
+﻿D:\csharp\KasseApp\Updater\bin\Release\net9.0-windows\win-x64\publish\Updater.pdb
+D:\csharp\KasseApp\Updater\bin\Release\net9.0-windows\win-x64\publish\Updater.exe

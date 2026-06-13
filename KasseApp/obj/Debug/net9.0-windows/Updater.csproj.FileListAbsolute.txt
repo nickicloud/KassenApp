@@ -1,0 +1,15 @@
+﻿D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.GeneratedMSBuildEditorConfig.editorconfig
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.AssemblyInfoInputs.cache
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.AssemblyInfo.cs
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.csproj.CoreCompileInputs.cache
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.sourcelink.json
+D:\csharp\KasseApp\Updater\bin\Debug\net9.0-windows\Updater.deps.json
+D:\csharp\KasseApp\Updater\bin\Debug\net9.0-windows\Updater.dll
+D:\csharp\KasseApp\Updater\bin\Debug\net9.0-windows\Updater.pdb
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.dll
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\refint\Updater.dll
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.pdb
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\ref\Updater.dll
+D:\csharp\KasseApp\Updater\bin\Debug\net9.0-windows\Updater.exe
+D:\csharp\KasseApp\Updater\bin\Debug\net9.0-windows\Updater.runtimeconfig.json
+D:\csharp\KasseApp\Updater\obj\Debug\net9.0-windows\Updater.genruntimeconfig.cache
