@@ -1,0 +1,73 @@
+﻿{
+  "Title_MainWindow": "Kassensystem",
+  "Main_Header": "Kassensystem",
+
+  "Search_Placeholder": "Suche nach Name oder Barcode",
+  "Button_Barcode": "Barcode",
+  "Button_Pay": "Bezahlen",
+  "Button_New": "Neu",
+  "Button_Edit": "Bearbeiten",
+  "Button_Delete": "Löschen",
+
+  "Grid_Col_Barcode": "Barcode",
+  "Grid_Col_Name": "Name",
+  "Grid_Col_Preis": "Preis",
+  "Grid_Col_Bestand": "Bestand",
+  "Grid_Col_ZusatzZahl": "ZusatzZahl",
+  "Grid_Col_ZusatzText": "ZusatzText",
+
+  "History_Header": "Barcode-Verlauf",
+  "History_Detail_Header": "Details",
+  "History_Detail_Barcode": "Barcode",
+  "History_Detail_Name": "Name",
+  "History_Detail_Preis": "Preis",
+  "History_Detail_BestandNachScan": "Bestand nach Scan",
+  "History_Detail_MengeImWarenkorb": "Menge im Warenkorb",
+
+  "Context_Product_CopyId": "Produkt ID kopieren",
+  "Context_Product_AddToCart": "In Warenkorb hinzufügen",
+  "Context_Empty_Refresh": "Aktualisieren",
+  "Context_Empty_HideZero": "Artikel mit Bestand 0 ausblenden",
+
+  "Dialog_Delete_Title": "Löschen",
+  "Dialog_Delete_Text": "Artikel '{0}' löschen?",
+  "Message_ErrorDb": "Fehler beim Zugriff auf die Datenbank.",
+
+  "ArtikelDialog_Title_New": "Neuer Artikel",
+  "ArtikelDialog_Title_Edit": "Artikel bearbeiten",
+  "ArtikelDialog_Barcode": "Barcode",
+  "ArtikelDialog_Name": "Name",
+  "ArtikelDialog_Preis": "Preis",
+  "ArtikelDialog_Bestand": "Bestand",
+  "ArtikelDialog_ZusatzZahl": "ZusatzZahl",
+  "ArtikelDialog_ZusatzText": "ZusatzText",
+  "ArtikelDialog_Ok": "Speichern",
+  "ArtikelDialog_Cancel": "Abbrechen",
+
+  "BarcodeWindow_Title": "Barcode scannen",
+  "BarcodeWindow_Info": "Bitte Barcode scannen oder eingeben.",
+  "BarcodeWindow_Ok": "Übernehmen",
+  "BarcodeWindow_Cancel": "Abbrechen",
+
+  "CartWindow_Title": "Warenkorb",
+  "CartWindow_Header": "Warenkorb",
+  "CartWindow_Col_Artikel": "Artikel",
+  "CartWindow_Col_Menge": "Menge",
+  "CartWindow_Col_Preis": "Preis",
+  "CartWindow_Pay": "Bezahlen",
+  "CartWindow_Cancel": "Abbrechen",
+  "CartWindow_Clear": "Leeren",
+  "CartWindow_DeletePosition": "Position löschen",
+  "CartWindow_Total": "Summe",
+
+  "LabelWindow_Title": "Etiketten drucken",
+  "LabelWindow_Print": "Drucken",
+  "LabelWindow_Cancel": "Abbrechen",
+  "LabelWindow_AskPrint": "Möchtest du für diesen Artikel Etiketten drucken?",
+  "LabelWindow_InvalidCount": "Bitte eine gültige Anzahl größer 0 eingeben.",
+  "LabelWindow_PrintError": "Fehler beim Drucken.",
+  "Button_PrintLabel": "Drucken",
+  "Message_NoArticleSelected": "Bitte zuerst einen Artikel auswählen."
+
+
+}
